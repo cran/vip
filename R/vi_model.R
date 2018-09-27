@@ -49,9 +49,9 @@ vi_model.C5.0 <- function(object, ...) {
   )
 
   # Add variable importance type attribute
-  dots <- list(...)
-  attr(tib, "type") <- if ("metric" %in% names(dots)) {
-    dots[["metric"]]
+  dot_pairlist <- substitute(...())
+  attr(tib, "type") <- if ("metric" %in% names(dot_pairlist)) {
+    eval(dot_pairlist[["metric"]], envir = parent.frame())
   } else {
     "usage"
   }
@@ -216,6 +216,126 @@ vi_model.lm <- function(object, ...) {
 
   # Add variable importance type attribute
   attr(tib, "type") <- "t-test"
+
+  # Return results
+  tib
+
+}
+
+
+#' @rdname vi_model
+#'
+#' @export
+vi_model.ml_model_decision_tree_regression <- function(object, ...) {
+
+  # Construct model-based variable importance scores
+  vis <- sparklyr::ml_feature_importances(object, ...)
+  names(vis) <- c("Variable", "Importance")
+  type <- "spark_tree"
+  tib <- tibble::as_tibble(vis)
+
+  # Add variable importance type attribute
+  attr(tib, "type") <- type
+
+  # Return results
+  tib
+
+}
+
+
+#' @rdname vi_model
+#'
+#' @export
+vi_model.ml_model_decision_tree_classification <- function(object, ...) {
+
+  # Construct model-based variable importance scores
+  vis <- sparklyr::ml_feature_importances(object, ...)
+  names(vis) <- c("Variable", "Importance")
+  type <- "spark_tree"
+  tib <- tibble::as_tibble(vis)
+
+  # Add variable importance type attribute
+  attr(tib, "type") <- type
+
+  # Return results
+  tib
+
+}
+
+
+#' @rdname vi_model
+#'
+#' @export
+vi_model.ml_model_gbt_regression <- function(object, ...) {
+
+  # Construct model-based variable importance scores
+  vis <- sparklyr::ml_feature_importances(object, ...)
+  names(vis) <- c("Variable", "Importance")
+  type <- "spark_gbt"
+  tib <- tibble::as_tibble(vis)
+
+  # Add variable importance type attribute
+  attr(tib, "type") <- type
+
+  # Return results
+  tib
+
+}
+
+
+#' @rdname vi_model
+#'
+#' @export
+vi_model.ml_model_gbt_classification <- function(object, ...) {
+
+  # Construct model-based variable importance scores
+  vis <- sparklyr::ml_feature_importances(object, ...)
+  names(vis) <- c("Variable", "Importance")
+  type <- "spark_gbt"
+  tib <- tibble::as_tibble(vis)
+
+  # Add variable importance type attribute
+  attr(tib, "type") <- type
+
+  # Return results
+  tib
+
+}
+
+
+#' @rdname vi_model
+#'
+#' @export
+vi_model.ml_model_random_forest_regression <- function(object, ...) {
+
+  # Construct model-based variable importance scores
+  vis <- sparklyr::ml_feature_importances(object, ...)
+  names(vis) <- c("Variable", "Importance")
+  type <- "spark_rf"
+  tib <- tibble::as_tibble(vis)
+
+  # Add variable importance type attribute
+  attr(tib, "type") <- type
+
+  # Return results
+  tib
+
+}
+
+
+#' @rdname vi_model
+#'
+#' @export
+vi_model.ml_model_random_forest_classification <- function(object, ...) {
+
+  # Construct model-based variable importance scores
+  vis <- sparklyr::ml_feature_importances(object, ...)
+  names(vis) <- c("Variable", "Importance")
+  type <- "spark_rf"
+  tib <- tibble::as_tibble(vis)
+
+  # Add variable importance type attribute
+  attr(tib, "type") <- type
 
   # Return results
   tib

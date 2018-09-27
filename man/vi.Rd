@@ -4,8 +4,8 @@
 \alias{vi}
 \title{Variable Importance}
 \usage{
-vi(object, method = c("model", "pdp", "ice", "perm"), feature_names,
-  FUN = NULL, truncate_feature_names = NULL, sort = TRUE,
+vi(object, method = c("model", "pdp", "ice", "permute"), feature_names,
+  FUN = NULL, abbreviate_feature_names = NULL, sort = TRUE,
   decreasing = TRUE, scale = FALSE, ...)
 }
 \arguments{
@@ -14,22 +14,21 @@ vi(object, method = c("model", "pdp", "ice", "perm"), feature_names,
 \item{method}{Character string specifying the type of variable importance
 (VI) to compute. Current options are \code{"model"} (for model-based VI
 scores), \code{"pdp"} (for PDP-based VI scores), \code{"ice"} (for ICE-based
-VI scores), and \code{"perm"} (for permutation-based VI scores). The default
-is \code{"model"}. For details on the PDP/ICE-based method, see the reference
-below. Also, \code{method = "perm"} is currently ignored, but will be
-available in a future release.}
+VI scores), and \code{"permute"} (for permutation-based VI scores). The
+default is \code{"model"}. For details on the PDP/ICE-based method, see the
+reference below.}
 
 \item{feature_names}{Character string giving the names of the predictor
 variables (i.e., features) of interest.}
 
-\item{FUN}{List with two componenets, \code{"cat"} and \code{"con"},
+\item{FUN}{List with two components, \code{"cat"} and \code{"con"},
 containing the functions to use for categorical and continuous features,
 respectively. If \code{NULL}, the standard deviation is used for continuous
 features. For categorical features, the range statistic is used (i.e.,
 (max - min) / 4).}
 
-\item{truncate_feature_names}{Integer specifying the length at which to
-truncate feature names. Default is \code{NULL} which results in no truncation
+\item{abbreviate_feature_names}{Integer specifying the length at which to
+abbreviate feature names. Default is \code{NULL} which results in no abbreviation
 (i.e., the full name of each feature will be printed).}
 
 \item{sort}{Logical indicating whether or not to order the sort the variable

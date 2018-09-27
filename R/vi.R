@@ -7,22 +7,21 @@
 #' @param method Character string specifying the type of variable importance
 #' (VI) to compute. Current options are \code{"model"} (for model-based VI
 #' scores), \code{"pdp"} (for PDP-based VI scores), \code{"ice"} (for ICE-based
-#' VI scores), and \code{"perm"} (for permutation-based VI scores). The default
-#' is \code{"model"}. For details on the PDP/ICE-based method, see the reference
-#' below. Also, \code{method = "perm"} is currently ignored, but will be
-#' available in a future release.
+#' VI scores), and \code{"permute"} (for permutation-based VI scores). The
+#' default is \code{"model"}. For details on the PDP/ICE-based method, see the
+#' reference below.
 #'
 #' @param feature_names Character string giving the names of the predictor
 #' variables (i.e., features) of interest.
 #'
-#' @param FUN List with two componenets, \code{"cat"} and \code{"con"},
+#' @param FUN List with two components, \code{"cat"} and \code{"con"},
 #' containing the functions to use for categorical and continuous features,
 #' respectively. If \code{NULL}, the standard deviation is used for continuous
 #' features. For categorical features, the range statistic is used (i.e.,
 #' (max - min) / 4).
 #'
-#' @param truncate_feature_names Integer specifying the length at which to
-#' truncate feature names. Default is \code{NULL} which results in no truncation
+#' @param abbreviate_feature_names Integer specifying the length at which to
+#' abbreviate feature names. Default is \code{NULL} which results in no abbreviation
 #' (i.e., the full name of each feature will be printed).
 #'
 #' @param sort Logical indicating whether or not to order the sort the variable
@@ -68,9 +67,9 @@
 #' # Plot variable importance scores
 #' vip(mtcars.ppr, method = "ice")
 vi <- function(
-  object, method = c("model", "pdp", "ice", "perm"), feature_names, FUN = NULL,
-  truncate_feature_names = NULL, sort = TRUE, decreasing = TRUE, scale = FALSE,
-  ...
+  object, method = c("model", "pdp", "ice", "permute"), feature_names,
+  FUN = NULL, abbreviate_feature_names = NULL, sort = TRUE, decreasing = TRUE,
+  scale = FALSE, ...
 ) {
 
   # Construct VI scores
@@ -80,16 +79,17 @@ vi <- function(
       feature_names <- get_feature_names(object)
     }
   }
-  tib <- if (method == "model") {
-    vi_model(object, ...)
-  } else if (method == "pdp") {
-    vi_pdp(object, feature_names = feature_names, FUN = FUN, ...)
-  } else if (method == "ice") {
-    vi_ice(object, feature_names = feature_names, FUN = FUN, ...)
-  } else {
-    stop("Permutation-based variable importance scores not yet implemented.",
-         call. = FALSE)
-  }
+
+  # Construct tibble of VI scores
+  tib <- switch(method,
+    "model" = vi_model(object, ...),
+    "pdp" = vi_pdp(object, feature_names = feature_names, FUN = FUN, ...),
+    "ice" = vi_ice(object, feature_names = feature_names, FUN = FUN, ...),
+    vi_permute(object, feature_names = feature_names, ...)
+  )
+
+  # Save attribute
+  vi_type <- attr(tib, which = "type")
 
   # Remove rows with NA
   tib <- stats::na.omit(tib)
@@ -99,15 +99,18 @@ vi <- function(
     tib <- sort_importance_scores(tib, decreasing = decreasing)
   }
 
-  # Truncate feature names (if requested)
-  if (!is.null(truncate_feature_names)) {
-    tib <- truncate_feature_names(tib, length = truncate_feature_names)
+  # Abbreviate feature names (if requested)
+  if (!is.null(abbreviate_feature_names)) {
+    tib <- abbreviate_names(tib, minlength = abbreviate_feature_names)
   }
 
   # Scale VI scores so that largest is 100
   if (scale) {
     tib$Importance <- tib$Importance / max(tib$Importance) * 100
   }
+
+  # Restore attribute
+  attr(tib, which = "type") <- vi_type
 
   # Return results
   tib

@@ -8,7 +8,7 @@
 #' @param feature_names Character string giving the names of the predictor
 #' variables (i.e., features) of interest.
 #'
-#' @param FUN List with two componenets, \code{"cat"} and \code{"con"},
+#' @param FUN List with two components, \code{"cat"} and \code{"con"},
 #' containing the functions to use for categorical and continuous features,
 #' respectively. If \code{NULL}, the standard deviation is used for continuous
 #' features. For categorical features, the range statistic is used (i.e.,
@@ -61,7 +61,8 @@ vi_ice.default <- function(object, feature_names, FUN = NULL, ...) {
   )
   ice <- lapply(vis, FUN = function(x) attr(x, "ice"))
   names(ice) <- feature_names
-  attr(tib, "ice") <- ice
+  attr(tib, which = "ice") <- ice
+  attr(tib, which = "type") <- "ice"
 
   # Return results
   tib
@@ -73,7 +74,7 @@ vi_ice.default <- function(object, feature_names, FUN = NULL, ...) {
 ice_vi_score <- function(object, feature_name, FUN, ...) {
 
   # Only allow for a single feature
-  if (length(feature_name) != 1) {
+  if (length(feature_name) != 1L) {
     stop("Only a single feature allowed in `ice_vi_score()`.", call. = FALSE)
   }
 
@@ -89,7 +90,7 @@ ice_vi_score <- function(object, feature_name, FUN, ...) {
   res <- mean(tapply(ice$yhat, INDEX = ice$yhat.id, FUN = FUN))
 
   # Include ICE curves as an attribute
-  attr(res, "ice") <- ice
+  attr(res, which = "ice") <- ice
 
   # Return result
   res

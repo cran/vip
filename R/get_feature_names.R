@@ -64,7 +64,18 @@ get_feature_names.lm <- function(object, ...) {
 
 #' @keywords internal
 get_feature_names.nls <- function(object, ...) {
-  all.vars(stats::formula(object)[[3L]])
+  # all.vars(stats::formula(object)[[3L]])  # returns all params
+  names(object$dataClasses)
+}
+
+
+#' @keywords internal
+get_feature_names.nnet <- function(object, ...) {
+  if (!is.null(object$coefnames)) {
+    object$coefnames
+  } else {
+    get_feature_names.default(object)
+  }
 }
 
 
@@ -88,13 +99,21 @@ get_feature_names.RandomForest <- function(object, ...) {
 
 #' @keywords internal
 get_feature_names.ranger <- function(object, ...) {
-  names(object$variable.importance)
+  if (!is.null(object$forest$independent.variable.names)) {
+    object$forest$independent.variable.names
+  } else if (!is.null(names(object$variable.importance))) {
+    names(object$variable.importance)
+  } else {
+    stop("Unable to recover feature names from ranger models with `importance",
+         " = \"none\"` and `write.forest = FALSE`.")
+  }
 }
 
 
 #' @keywords internal
 get_feature_names.rpart <- function(object, ...) {
-  names(object$variable.importance)
+  # names(object$variable.importance)
+  all.vars(stats::formula(object)[[3L]])
 }
 
 
