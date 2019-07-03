@@ -5,6 +5,9 @@
 #'
 #' @param object A fitted model object (e.g., a \code{"randomForest"} object).
 #'
+#' @param feature_names Character string giving the names of the predictor
+#' variables (i.e., features) of interest.
+#'
 #' @param train A matrix-like R object (e.g., a data frame or matrix)
 #' containing the training data.
 #'
@@ -17,25 +20,61 @@
 #' regression or accuracy for binary classification). If \code{metric} is a
 #' function, then it requires two arguments, \code{actual} and \code{predicted},
 #' and should return a single, numeric value. Ideally, this should be the same
-#' metric that was to train \code{object}.
+#' metric that was used to train \code{object}. See \code{\link{list_metrics}}
+#' for a list of available metrics.
 #'
 #' @param smaller_is_better Logical indicating whether or not a smaller value
 #' of \code{metric} is better. Default is \code{NULL}. Must be supplied if
 #' \code{metric} is a user-supplied function.
+#'
+#' @param type Character string specifying how to compare the baseline and
+#' permuted performance metrics. Current options are \code{"difference"} (the
+#' default) and \code{"ratio"}.
+#'
+#' @param nsim Integer specifying the number of Monte Carlo replications to
+#' perform. Default is 1. If \code{nsim > 1}, the results from each replication
+#' are simply averaged together (the standard deviation will also be returned).
+#'
+#' @param keep Logical indicating whether or not to keep the individual
+#' permutation scores for all \code{nsim} repetitions. If \code{TRUE} (the
+#' default) then the individual variable importance scores will be stored in an
+#' attribute called \code{"raw_scores"}. (Only used when \code{nsim > 1}.)
+#'
+#' @param sample_size Integer specifying the size of the random sample to use
+#' for each Monte Carlo repetition. Default is \code{NULL} (i.e., use all of the
+#' available training data). Cannot be specified with \code{sample_frac}. Can be
+#' used to reduce computation time with large data sets.
+#'
+#' @param sample_frac Proportion specifying the size of the random sample to use
+#' for each Monte Carlo repetition. Default is \code{NULL} (i.e., use all of the
+#' available training data). Cannot be specified with \code{sample_size}. Can be
+#' used to reduce computation time with large data sets.
 #'
 #' @param reference_class Character string specifying which response category
 #' represents the "reference" class (i.e., the class for which the predicted
 #' class probabilities correspond to). Only needed for binary classification
 #' problems.
 #'
-#' @param pred_fun Optional prediction function that requires two arguments,
+#' @param pred_fun Deprecated. Use \code{pred_wrapper} instead.
+#'
+#' @param pred_wrapper Optional prediction function that requires two arguments,
 #' \code{object} and \code{newdata}. Default is \code{NULL}. Must be supplied
-#' whenever \code{metric} is a custom function.
+#' whenever \code{metric} is a custom function. In fact, it is good practice to
+#' always supply this function! The output of this function should be determined
+#' by the metric being used:
+#'
+#' \describe{
+#'   \item{Regression}{A numeric vector of predicted outcomes.}
+#'   \item{Binary classification}{A vector of predicted class labels (e.g., if
+#'   using misclassification error) or a vector of predicted class probabilities
+#'   for the reference class (e.g., if using log loss or AUC).}
+#'   \item{Multiclass classification}{A vector of predicted class labels (e.g.,
+#'   if using misclassification error) or a A matrix/data frame of predicted
+#'   class probabilities for each class (e.g., if using log loss or AUC).}
+#' }
 #'
 #' @return A tidy data frame (i.e., a \code{"tibble"} object) with two columns:
-#' \code{Variable} and \code{Importance}. For \code{"glm"}-like object, an
-#' additional column, called \code{Sign}, is also included which gives the sign
-#' (i.e., POS/NEG) of the original coefficient.
+#' \code{Variable} and \code{Importance}.
 #'
 #' @param verbose Logical indicating whether or not to print information during
 #' the construction of variable importance scores. Default is \code{FALSE}.
@@ -84,9 +123,9 @@
 #' # Plot VI scores
 #' set.seed(2021)  # for reproducibility
 #' p1 <- vip(pp, method = "permute", target = "y", metric = "rsquared",
-#'           pred_fun = predict) + ggtitle("PPR")
+#'           pred_wrapper = predict) + ggtitle("PPR")
 #' p2 <- vip(nn, method = "permute", target = "y", metric = "rsquared",
-#'           pred_fun = predict) + ggtitle("NN")
+#'           pred_wrapper = predict) + ggtitle("NN")
 #' grid.arrange(p1, p2, ncol = 2)
 #'
 #' # Mean absolute error
@@ -98,7 +137,7 @@
 #' set.seed(1101)  # for reproducibility
 #' vip(pp, method = "permute", target = "y", metric = mae,
 #'     smaller_is_better = TRUE,
-#'     pred_fun = function(object, newdata) predict(object, newdata)  # wrapper
+#'     pred_wrapper = function(object, newdata) predict(object, newdata)
 #' ) + ggtitle("PPR")
 #' }
 vi_permute <- function(object, ...) {
@@ -109,14 +148,37 @@ vi_permute <- function(object, ...) {
 #' @rdname vi_permute
 #'
 #' @export
-vi_permute.default <- function(object, train, target, metric = "auto",
-  smaller_is_better = NULL, reference_class = NULL, pred_fun = NULL,
-  verbose = FALSE, progress = "none", parallel = FALSE, paropts = NULL, ...
+vi_permute.default <- function(
+  object,
+  feature_names = NULL,
+  train,
+  target,
+  metric = "auto",
+  smaller_is_better = NULL,
+  type = c("difference", "ratio"),
+  nsim = 1,
+  keep = TRUE,
+  sample_size = NULL,
+  sample_frac = NULL,
+  reference_class = NULL,
+  pred_fun = NULL,
+  pred_wrapper = NULL,
+  verbose = FALSE,
+  progress = "none",
+  parallel = FALSE,
+  paropts = NULL,
+  ...
 ) {
 
-  # Issue warning until this function is complete!
-  warning("Setting `method = \"permute\"` is experimental, use at your own ",
-          "risk!", call. = FALSE)
+  # # Issue warning until this function is complete!
+  # warning("Setting `method = \"permute\"` is experimental, use at your own ",
+  #         "risk!", call. = FALSE)
+
+  # Catch deprecated arguments
+  if (!is.null(pred_fun)) {
+    stop("Argument `pred_fun` is deprecated; please use `pred_wrapper` ",
+         "instead.", call. = FALSE)
+  }
 
   # Get training data, if not supplied
   if (missing(train)) {
@@ -125,13 +187,33 @@ vi_permute.default <- function(object, train, target, metric = "auto",
 
   # Extract feature names and separate features from target (if necessary)
   if (is.character(target)) {
-    feature_names <- setdiff(colnames(train), target)
+    if (is.null(feature_names)) {
+      feature_names <- setdiff(colnames(train), target)
+    }
     train_x <- train[, feature_names]
     train_y <- train[, target, drop = TRUE]
   } else {
-    feature_names <- colnames(train)
+    if (is.null(feature_names)) {
+      feature_names <- colnames(train)
+    }
     train_x <- train
     train_y <- target
+  }
+
+  # Sample the data?
+  if (!is.null(sample_size) && !is.null(sample_frac)) {
+    stop("Arguments `sample_size` and `sample_frac` cannot both be specified.")
+  }
+  if (!is.null(sample_size)) {
+    if (sample_size <= 0 || sample_size > nrow(train)) {
+      stop("Argument `sample_size` must be in (0, ", nrow(train), "].")
+    }
+  }
+  if (!is.null(sample_frac)) {
+    if (sample_frac <= 0 || sample_frac > 1) {
+      stop("Argument `sample_frac` must be in (0, 1].")
+    }
+    sample_size <- round(nrow(train) * sample_frac, digits = 0)
   }
 
   # Metric
@@ -144,24 +226,30 @@ vi_permute.default <- function(object, train, target, metric = "auto",
            call. = FALSE)
     }
 
-    # If `metric` is a user-supplied function, then `pred_fun` cannot
+    # If `metric` is a user-supplied function, then `pred_wrapper` cannot
     # be `NULL`.
     if (is.null(smaller_is_better)) {
       stop("Please specify a logical value for `smaller_is_better`.",
            call. = FALSE)
     } else {
       # Check prediction function arguments
-      if (!all(c("object", "newdata") %in% names(formals(pred_fun)))) {
-        stop("`pred_fun()` must be a function with arguments `object` and ",
+      if (!all(c("object", "newdata") %in% names(formals(pred_wrapper)))) {
+        stop("`pred_wrapper()` must be a function with arguments `object` and ",
              "`newdata`.", call. = FALSE)
       }
     }
 
     # Check prediction function arguments
-    if (!identical(c("actual", "predicted"), names(formals(metric)))) {
+    if (!all(c("actual", "predicted") %in% names(formals(metric)))) {
       stop("`metric()` must be a function with arguments `actual` and ",
            "`predicted`.", call. = FALSE)
     }
+
+    # # Check if reference class is provided
+    # if (!is.null(reference_class)) {
+    #   reference_class <- train_y[1L]
+    # }
+    # train_y <- ifelse(train_y == reference_class, yes = 1, no = 0)
 
     # Performance function
     perf_fun <- metric
@@ -221,13 +309,13 @@ vi_permute.default <- function(object, train, target, metric = "auto",
 
     # Get prediction function, if not supplied
     prob_based_metrics <- c("auc", "mauc", "logloss", "mlogloss")
-    if (is.null(pred_fun)) {
-      type <- if (metric %in% prob_based_metrics) {
+    if (is.null(pred_wrapper)) {
+      pred_type <- if (metric %in% prob_based_metrics) {
         "prob"
       } else {
         "raw"
       }
-      pred_fun <- get_predictions(object, type = type)
+      pred_wrapper <- get_predictions(object, type = pred_type)
     }
 
     # Determine reference class (binary classification only)
@@ -244,8 +332,16 @@ vi_permute.default <- function(object, train, target, metric = "auto",
   # Compute baseline metric for comparison
   baseline <- perf_fun(
     actual = train_y,
-    predicted = pred_fun(object, newdata = train_x)
+    predicted = pred_wrapper(object, newdata = train_x)
   )
+
+  # Type of comparison
+  type <- match.arg(type)
+  `%compare%` <- if (type == "difference") {
+    `-`
+  } else {
+    `/`
+  }
 
   # Construct VI scores
   #
@@ -255,32 +351,54 @@ vi_permute.default <- function(object, train, target, metric = "auto",
   #   2. permute the values of the original feature;
   #   3. get new predictions based on permuted data set;
   #   4. record difference in accuracy.
-  vis <- unlist(plyr::llply(feature_names, .progress = progress,
-    .parallel = parallel, .paropts = paropts,
-    .fun = function(x) {
-      if (verbose && !parallel) {
-        message("Computing variable importance for ", x, "...")
-      }
-      train_x_permuted <- train_x  # make copy
-      train_x_permuted[[x]] <- sample(train_x_permuted[[x]])  # permute values
-      permuted <- perf_fun(
-        actual = train_y,
-        predicted = pred_fun(object, newdata = train_x_permuted)
-      )
-      if (smaller_is_better) {
-        permuted - baseline
-      } else {
-        baseline - permuted
-      }
-    })
-  )
+  vis <- replicate(nsim,
+    unlist(plyr::llply(feature_names, .progress = progress,
+      .parallel = parallel, .paropts = paropts,
+      .fun = function(x) {
+        if (verbose && !parallel) {
+          message("Computing variable importance for ", x, "...")
+        }
+        if (!is.null(sample_size)) {
+          ids <- sample(length(train_y), size = sample_size, replace = FALSE)
+          train_x <- train_x[ids, ]
+          train_y <- train_y[ids]
+        }
+        # train_x_permuted <- train_x  # make copy
+        # train_x_permuted[[x]] <- sample(train_x_permuted[[x]])  # permute values
+        train_x_permuted <- permute_columns(train_x, columns = x)
+        permuted <- perf_fun(
+          actual = train_y,
+          predicted = pred_wrapper(object, newdata = train_x_permuted)
+        )
+        if (smaller_is_better) {
+          permuted %compare% baseline  # e.g., RMSE
+        } else {
+          baseline %compare% permuted  # e.g., R-squared
+        }
+      })
+  ))
+
+  # Construct tibble of variable importance scores
   tib <- tibble::tibble(
     "Variable" = feature_names,
-    "Importance" = vis
+    "Importance" = apply(vis, MARGIN = 1, FUN = mean)
   )
+  if (nsim > 1) {
+    tib$StDev <- apply(vis, MARGIN = 1, FUN = stats::sd)
+  }
+
+  # Add all nsim scores as an attribute
+  if (nsim > 1 && keep) {
+    rownames(vis) <- feature_names
+    colnames(vis) <- paste0("permutation_", seq_len(ncol(vis)))
+    attr(tib, which = "raw_scores") <- vis
+  }
 
   # Add variable importance type attribute
   attr(tib, which = "type") <- "permutation"
+
+  # Add "vi" class
+  class(tib) <- c("vi", class(tib))
 
   # Return results
   tib

@@ -8,11 +8,6 @@ Status](https://travis-ci.org/koalaverse/vip.svg?branch=master)](https://travis-
 Status](https://ci.appveyor.com/api/projects/status/github/koalaverse/vip?branch=master&svg=true)](https://ci.appveyor.com/project/koalaverse/vip)
 [![Coverage
 Status](https://img.shields.io/codecov/c/github/koalaverse/vip/master.svg)](https://codecov.io/github/koalaverse/vip?branch=master)
-[![CRAN RStudio mirror
-downloads](http://cranlogs.r-pkg.org/badges/vip)](http://www.r-pkg.org/pkg/vip)
-[![Total
-Downloads](http://cranlogs.r-pkg.org/badges/grand-total/vip)](http://www.r-pkg.org/badges/grand-total/vip)
-[![lifecycle](https://img.shields.io/badge/lifecycle-maturing-brightgreen.svg)](https://www.tidyverse.org/lifecycle/#stable)
 
 ## Overview
 
@@ -33,10 +28,10 @@ found here: <https://github.com/christophM/interpretable-ml-book>.
 install.packages("vip")
 
 # Alternatively, you can install the development version from GitHub:
-if (!requireNamespace("devtools")) {
-  install.packages("devtools")
+if (!requireNamespace("remotes")) {
+  install.packages("remotes")
 }
-devtools::install_github("koalaverse/vip")
+remotes::install_github("koalaverse/vip")
 ```
 
 For details and example usage, visit the [**vip** package

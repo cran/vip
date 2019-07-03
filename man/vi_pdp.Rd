@@ -7,7 +7,8 @@
 \usage{
 vi_pdp(object, ...)
 
-\method{vi_pdp}{default}(object, feature_names, FUN = NULL, ...)
+\method{vi_pdp}{default}(object, feature_names, FUN = NULL,
+  var_fun = NULL, ...)
 }
 \arguments{
 \item{object}{A fitted model object (e.g., a \code{"randomForest"} object).}
@@ -18,11 +19,15 @@ vi_pdp(object, ...)
 \item{feature_names}{Character string giving the names of the predictor
 variables (i.e., features) of interest.}
 
-\item{FUN}{List with two components, \code{"cat"} and \code{"con"},
-containing the functions to use for categorical and continuous features,
-respectively. If \code{NULL}, the standard deviation is used for continuous
-features. For categorical features, the range statistic is used (i.e.,
-(max - min) / 4).}
+\item{FUN}{Deprecated. Use \code{var_fun} instead.}
+
+\item{var_fun}{List with two components, \code{"cat"} and \code{"con"},
+containing the functions to use to quantify the variability of the feature
+effects (e.g., partial dependence values) for categorical and continuous
+features, respectively. If \code{NULL}, the standard deviation is used for
+continuous features. For categorical features, the range statistic is used
+(i.e., (max - min) / 4). Only used when \code{method = "pdp"} or
+\code{method = "ice"}.}
 }
 \value{
 A tidy data frame (i.e., a \code{"tibble"} object) with two columns,
@@ -30,9 +35,23 @@ A tidy data frame (i.e., a \code{"tibble"} object) with two columns,
 associated importance score, respectively.
 }
 \description{
-Compute PDP-based variable importance scores for the predictors in a model.
-(This function is meant for internal use only.)
+Compute PDP-based VIscores for the predictors in a model.
+See details below.
 }
 \details{
-Coming soon!
+This approach to computing VI scores is based on quantifying the
+relative "flatness" of the \emph{partial dependence plot} (PDP) of each
+feature. It is model-agnostic and can be applied to any supervised learning
+algorithm. By default, relative "flatness" is defined by computing the
+standard deviation of the y-axis values for each PDP for numeric features;
+for categorical features, the default is to use range divided by 4. This can
+be changed via the `var_fun` argument. See
+\href{https://arxiv.org/abs/1805.04755}{Greenwell et al. (2018)} for details
+and additional examples.
+
+#' @references
+Greenwell, B. M., Boehmke, B. C., and McCarthy, A. J. A Simple
+and Effective Model-Based Variable Importance Measure. arXiv preprint
+arXiv:1805.04755 (2018).
+#' @rdname vi_pdp
 }

@@ -7,15 +7,20 @@
 \usage{
 vi_permute(object, ...)
 
-\method{vi_permute}{default}(object, train, target, metric = "auto",
-  smaller_is_better = NULL, reference_class = NULL, pred_fun = NULL,
-  verbose = FALSE, progress = "none", parallel = FALSE,
-  paropts = NULL, ...)
+\method{vi_permute}{default}(object, feature_names = NULL, train, target,
+  metric = "auto", smaller_is_better = NULL, type = c("difference",
+  "ratio"), nsim = 1, keep = TRUE, sample_size = NULL,
+  sample_frac = NULL, reference_class = NULL, pred_fun = NULL,
+  pred_wrapper = NULL, verbose = FALSE, progress = "none",
+  parallel = FALSE, paropts = NULL, ...)
 }
 \arguments{
 \item{object}{A fitted model object (e.g., a \code{"randomForest"} object).}
 
 \item{...}{Additional optional arguments. (Currently ignored.)}
+
+\item{feature_names}{Character string giving the names of the predictor
+variables (i.e., features) of interest.}
 
 \item{train}{A matrix-like R object (e.g., a data frame or matrix)
 containing the training data.}
@@ -29,20 +34,58 @@ performance metric to use in computing model performance (e.g., RMSE for
 regression or accuracy for binary classification). If \code{metric} is a
 function, then it requires two arguments, \code{actual} and \code{predicted},
 and should return a single, numeric value. Ideally, this should be the same
-metric that was to train \code{object}.}
+metric that was used to train \code{object}. See \code{\link{list_metrics}}
+for a list of available metrics.}
 
 \item{smaller_is_better}{Logical indicating whether or not a smaller value
 of \code{metric} is better. Default is \code{NULL}. Must be supplied if
 \code{metric} is a user-supplied function.}
+
+\item{type}{Character string specifying how to compare the baseline and
+permuted performance metrics. Current options are \code{"difference"} (the
+default) and \code{"ratio"}.}
+
+\item{nsim}{Integer specifying the number of Monte Carlo replications to
+perform. Default is 1. If \code{nsim > 1}, the results from each replication
+are simply averaged together (the standard deviation will also be returned).}
+
+\item{keep}{Logical indicating whether or not to keep the individual
+permutation scores for all \code{nsim} repetitions. If \code{TRUE} (the
+default) then the individual variable importance scores will be stored in an
+attribute called \code{"raw_scores"}. (Only used when \code{nsim > 1}.)}
+
+\item{sample_size}{Integer specifying the size of the random sample to use
+for each Monte Carlo repetition. Default is \code{NULL} (i.e., use all of the
+available training data). Cannot be specified with \code{sample_frac}. Can be
+used to reduce computation time with large data sets.}
+
+\item{sample_frac}{Proportion specifying the size of the random sample to use
+for each Monte Carlo repetition. Default is \code{NULL} (i.e., use all of the
+available training data). Cannot be specified with \code{sample_size}. Can be
+used to reduce computation time with large data sets.}
 
 \item{reference_class}{Character string specifying which response category
 represents the "reference" class (i.e., the class for which the predicted
 class probabilities correspond to). Only needed for binary classification
 problems.}
 
-\item{pred_fun}{Optional prediction function that requires two arguments,
+\item{pred_fun}{Deprecated. Use \code{pred_wrapper} instead.}
+
+\item{pred_wrapper}{Optional prediction function that requires two arguments,
 \code{object} and \code{newdata}. Default is \code{NULL}. Must be supplied
-whenever \code{metric} is a custom function.}
+whenever \code{metric} is a custom function. In fact, it is good practice to
+always supply this function! The output of this function should be determined
+by the metric being used:
+
+\describe{
+  \item{Regression}{A numeric vector of predicted outcomes.}
+  \item{Binary classification}{A vector of predicted class labels (e.g., if
+  using misclassification error) or a vector of predicted class probabilities
+  for the reference class (e.g., if using log loss or AUC).}
+  \item{Multiclass classification}{A vector of predicted class labels (e.g.,
+  if using misclassification error) or a A matrix/data frame of predicted
+  class probabilities for each class (e.g., if using log loss or AUC).}
+}}
 
 \item{verbose}{Logical indicating whether or not to print information during
 the construction of variable importance scores. Default is \code{FALSE}.}
@@ -61,9 +104,7 @@ is \code{FALSE}. If \code{TRUE}, an appropriate backend must be provided by
 }
 \value{
 A tidy data frame (i.e., a \code{"tibble"} object) with two columns:
-\code{Variable} and \code{Importance}. For \code{"glm"}-like object, an
-additional column, called \code{Sign}, is also included which gives the sign
-(i.e., POS/NEG) of the original coefficient.
+\code{Variable} and \code{Importance}.
 }
 \description{
 Compute permutation-based variable importance scores for the predictors in a
@@ -96,9 +137,9 @@ nn <- nnet(y ~ ., data = trn, size = 7, decay = 0.1, linout = TRUE,
 # Plot VI scores
 set.seed(2021)  # for reproducibility
 p1 <- vip(pp, method = "permute", target = "y", metric = "rsquared",
-          pred_fun = predict) + ggtitle("PPR")
+          pred_wrapper = predict) + ggtitle("PPR")
 p2 <- vip(nn, method = "permute", target = "y", metric = "rsquared",
-          pred_fun = predict) + ggtitle("NN")
+          pred_wrapper = predict) + ggtitle("NN")
 grid.arrange(p1, p2, ncol = 2)
 
 # Mean absolute error
@@ -110,7 +151,7 @@ mae <- function(actual, predicted) {
 set.seed(1101)  # for reproducibility
 vip(pp, method = "permute", target = "y", metric = mae,
     smaller_is_better = TRUE,
-    pred_fun = function(object, newdata) predict(object, newdata)  # wrapper
+    pred_wrapper = function(object, newdata) predict(object, newdata)
 ) + ggtitle("PPR")
 }
 }
