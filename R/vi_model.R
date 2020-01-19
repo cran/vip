@@ -1,7 +1,7 @@
 #' Model-specific variable importance
 #'
 #' Compute model-specific variable importance scores for the predictors in a
-#' model. (This function is meant for internal use only.)
+#' model.
 #'
 #' @param object A fitted model object (e.g., a \code{"randomForest"} object).
 #'
@@ -9,7 +9,7 @@
 #' return (only used for some models). See details for which methods this
 #' argument applies to.
 #'
-#' @param ... Additional optional arguments.
+#' @param ... Additional optional arguments to be passed on to other methods.
 #'
 #' @return A tidy data frame (i.e., a \code{"tibble"} object) with two columns:
 #' \code{Variable} and \code{Importance}. For \code{"lm"/"glm"}-like object, an
@@ -86,6 +86,7 @@
 #' three criteria for estimating the variable importance in a MARS model (see
 #' \code{\link[earth]{evimp}} for details):
 #' \itemize{
+#'
 #'   \item The \code{nsubsets} criterion (\code{type = "nsubsets"}) counts the
 #'   number of model subsets that include each feature. Variables that are
 #'   included in more subsets are considered more important. This is the
@@ -115,6 +116,7 @@
 #'   estimated predictive power on unseen data.) If that happens often enough,
 #'   the variable can have a negative total importance, and thus appear less
 #'   important than unused variables.
+#'
 #' }}
 #'
 #' \item{\code{\link[gbm]{gbm}}}{Variable importance is computed using one of
@@ -160,9 +162,11 @@
 #' for details.}
 #'
 #' \item{\code{\link[stats]{lm}}}{In (generalized) linear models, variable
-#' importance is based on the absolute value of the corresponding
+#' importance is typically based on the absolute value of the corresponding
 #' \emph{t}-statistics. For such models, the sign of the original coefficient
-#' is also returned.}
+#' is also returned. By default, \code{type = "stat"} is used; however, if the
+#' inputs have been appropriately standardized then the raw coefficients can be
+#' used with \code{type = "raw"}.}
 #'
 #' \item{\code{\link[sparklyr]{ml_feature_importances}}}{The Spark ML
 #' library provides standard variable importance for tree-based methods (e.g.,
@@ -178,7 +182,8 @@
 #' the forest, and normalized by the standard deviation of the differences. If
 #' the standard deviation of the differences is equal to 0 for a variable,
 #' the division is not done (but the average is almost always equal to 0 in that
-#' case).
+#' case). See \code{\link[randomForest]{importance}} for details, including
+#' additional arguments that can be passed via the \code{...} argument.
 #'
 #' The second measure is the total decrease in node impurities from splitting on
 #' the variable, averaged over all trees. For classification, the node impurity
@@ -216,9 +221,22 @@
 #' model, the features need to be on the same scale (which you also would want
 #' to do when using either L1 or L2 regularization). Otherwise, the approach
 #' described in Friedman (2001) for \code{\link[gbm]{gbm}}s is used. See
-#' \code{\link[xgboost]{xgb.importance}} for details. If \code{type = NULL} (the
-#' default), \code{"Gain"} is used. See \code{\link[xgboost]{xgb.importance}}
-#' for details.}
+#' \code{\link[xgboost]{xgb.importance}} for details. For tree models, you can
+#' obtain three different types of variable importance:
+#' \itemize{
+#'
+#'   \item Using \code{type = "gain"} (the default) gives the fractional
+#'   contribution of each feature to the model based on the total gain of the
+#'   corresponding feature's splits.
+#'
+#'   \item Using \code{type = "cover"} gives the number of observations related
+#'   to each feature.
+#'
+#'   \item Using \code{type = "frequency"} gives the percentages representing
+#'   the relative number of times each feature has been used throughout each
+#'   tree in the ensemble.
+#'
+#' }}
 #'
 #' }
 #'
@@ -236,8 +254,8 @@ vi_model <- function(object, ...) {
 #'
 #' @export
 vi_model.default <- function(object, ...) {
-  stop("model-specific variable importance scores are currently not available ",
-       "for objects of class ", "\"", class(object), "\".")
+  stop("Model-specific variable importance scores are currently not available ",
+       "for this type of model.", call. = FALSE)
 }
 
 
@@ -586,6 +604,31 @@ vi_model.H2ORegressionModel <- function(object, ...) {
 }
 
 
+# Package: mlr -----------------------------------------------------------------
+
+#' @rdname vi_model
+#'
+#' @export
+vi_model.WrappedModel <- function(object, ...) {  # package: mlr
+  vi_model(object$learner.model, ...)
+}
+
+
+# Package: mlr3 ----------------------------------------------------------------
+
+#' @rdname vi_model
+#'
+#' @export
+vi_model.Learner <- function(object, ...) {  # package: mlr3
+  if (is.null(object$model)) {
+    stop("No fitted model found. Did you forget to call ",
+         deparse(substitute(object)), "$train()?",
+         call. = FALSE)
+  }
+  vi_model(object$model, ...)
+}
+
+
 # Package: neuralnet -----------------------------------------------------------
 
 #' @rdname vi_model
@@ -669,6 +712,16 @@ vi_model.nnet <- function(object, type = c("olden", "garson"), ...) {
   # Return results
   tib
 
+}
+
+
+# Package: parsnip -------------------------------------------------------------
+
+#' @rdname vi_model
+#'
+#' @export
+vi_model.model_fit <- function(object, ...) {  # package: parsnip
+  vi_model(object$fit, ...)
 }
 
 
@@ -782,6 +835,37 @@ vi_model.cforest <- function(object, ...) {
 }
 
 
+# Package: pls -----------------------------------------------------------------
+
+#' @rdname vi_model
+#'
+#' @export
+vi_model.mvr <- function(object, ...) {
+  # FIXME: For now, just default to using caret.
+  #
+  # Check for dependency
+  if (!requireNamespace("caret", quietly = TRUE)) {
+    stop("Package \"caret\" needed for this function to work. Please ",
+         "install it.", call. = FALSE)
+  }
+  vis <- caret::varImp(object, ...)
+  tib <- tibble::tibble(
+    "Variable" = rownames(vis),
+    "Importance" = vis[["Overall"]]
+  )
+
+  # Add variable importance type attribute
+  attr(tib, which = "type") <- "caret"
+
+  # Add "vi" class
+  class(tib) <- c("vi", class(tib))
+
+  # Return results
+  tib
+
+}
+
+
 # Package: randomForest --------------------------------------------------------
 
 #' @rdname vi_model
@@ -797,10 +881,12 @@ vi_model.randomForest <- function(object, ...) {
 
   # Construct model-specific variable importance scores
   vis <- randomForest::importance(object, ...)
+  matched_cols <- intersect(
+    x = colnames(vis),
+    y = c("MeanDecreaseAccuracy", "MeanDecreaseGini", "%IncMSE", "IncNodePurity")
+  )
+  vis <- vis[, matched_cols, drop = FALSE]
   type <- colnames(vis)[1L]
-  if (dim(vis)[2L] == 0) {  # possible when importance = FALSE in RF call
-    importance_scores <- object$importance
-  }
   vis <- vis[, 1L, drop = TRUE]
   tib <- tibble::tibble(
     "Variable" = names(vis),
@@ -1169,24 +1255,37 @@ vi_model.ml_model_random_forest_classification <- function(object, ...) {
 #' @rdname vi_model
 #'
 #' @export
-vi_model.lm <- function(object, ...) {
+vi_model.lm <- function(object, type = c("stat", "raw"), ...) {
+
+  # Determine which type of variable importance to compute
+  type <- match.arg(type)
+
+  # pattern to match based on type
+  if (type == "stat") {
+    type_pattern <- "^(t|z) value"
+  } else {
+    type_pattern <- "Estimate"
+  }
 
   # Construct model-specific variable importance scores
   coefs <- summary(object)$coefficients
   if (attr(object$terms, "intercept") == 1) {
     coefs <- coefs[-1L, , drop = FALSE]
   }
+  pos <- grep(type_pattern, x = colnames(coefs))
   tib <- tibble::tibble(
     "Variable" = rownames(coefs),
-    "Importance" = abs(coefs[, "t value"]),
+    "Importance" = abs(coefs[, pos]),
     "Sign" = ifelse(sign(coefs[, "Estimate"]) == 1, yes = "POS", no = "NEG")
   )
 
   # Add variable importance type attribute
-  attr(tib, which = "type") <- if (inherits(object, what = "glm")) {
-    "|z-statistic|"
+  if (type == "stat") {
+    label <- colnames(coefs)[pos]
+    label <- substr(label, start = 1, stop = 1)  # strip off t or z
+    attr(tib, which = "type") <- paste0("|", label, "-statistic|")
   } else {
-    "|t-statistic|"
+    attr(tib, which = "type") <- "|raw coefficients|"
   }
 
   # Add "vi" class
@@ -1218,6 +1317,9 @@ vi_model.xgb.Booster <- function(object, type = c("gain", "cover", "frequency"),
   # Construct model-specific variable importance scores
   imp <- xgboost::xgb.importance(model = object, ...)
   names(imp) <- tolower(names(imp))
+  if ("weight" %in% names(imp)) {
+    type <- "weight"  # gblinear
+  }
   vis <- tibble::as.tibble(imp)[, c("feature", type)]
   tib <- tibble::tibble(
     "Variable" = vis$feature,

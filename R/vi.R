@@ -6,13 +6,14 @@
 #' an object that inherits from class \code{"vi"}.
 #'
 #' @param method Character string specifying the type of variable importance
-#' (VI) to compute. Current options are \code{"model"}, for model-specific VI
-#' scores (see \code{\link{vi_model}} for details), \code{"pdp"}, for PDP-based
-#' VI scores (see \code{\link{vi_pdp}} for details), \code{"ice"}, for ICE-based
-#' VI scores (see \code{\link{vi_ice}} for details), and \code{"permute"}, for
-#' permutation-based VI scores (see \code{\link{vi_permute}} for details). The
-#' default depends on the class of \code{object}. For more details on the
-#' PDP/ICE-based methods, see the reference below.
+#' (VI) to compute. Current options are \code{"model"} (the default), for
+#' model-specific VI scores (see \code{\link{vi_model}} for details),
+#' \code{"firm"}, for variance-based VI scores (see \code{\link{vi_firm}} for
+#' details), \code{"permute"}, for permutation-based VI scores (see '
+#' \code{\link{vi_permute}} for details), or \code{"shap"}, for Shapley-based
+#' VI scores. For more details on the variance-based methods, see
+#' \href{https://arxiv.org/abs/1805.04755}{Greenwell et al. (2018)} and
+#' \href{https://arxiv.org/abs/1904.03959}{Scholbeck et al. (2019)}.
 #'
 #' @param feature_names Character string giving the names of the predictor
 #' variables (i.e., features) of interest.
@@ -24,8 +25,13 @@
 #' effects (e.g., partial dependence values) for categorical and continuous
 #' features, respectively. If \code{NULL}, the standard deviation is used for
 #' continuous features. For categorical features, the range statistic is used
-#' (i.e., (max - min) / 4). Only used when \code{method = "pdp"} or
-#' \code{method = "ice"}.
+#' (i.e., (max - min) / 4). Only applies when \code{method = "firm"}.
+#'
+#' @param ice Logical indicating whether or not to estimate feature effects
+#' using \emph{individual conditional expectation} (ICE) curves.
+#' Only applies when \code{method = "firm"}. Default is \code{FALSE}. Setting
+#' \code{ice = TRUE} is preferred whenever strong interaction effects are
+#' potentially present.
 #'
 #' @param abbreviate_feature_names Integer specifying the length at which to
 #' abbreviate feature names. Default is \code{NULL} which results in no
@@ -46,9 +52,9 @@
 #' Potentially useful when comparing variable importance scores across different
 #' models using different methods.
 #'
-#' @param ... Additional optional arguments to be passed onto
-#' \code{\link{vi_model}}, \code{\link{vi_pdp}}, \code{\link{vi_ice}}, or
-#' \code{\link{vi_permute}}.
+#' @param ... Additional optional arguments to be passed on to
+#' \code{\link{vi_model}}, \code{\link{vi_firm}}, \code{\link{vi_permute}},
+#' or \code{\link{vi_shap}}.
 #'
 #' @return A tidy data frame (i.e., a \code{"tibble"} object) with at least two
 #' columns: \code{Variable} and \code{Importance}. For \code{"lm"/"glm"}-like
@@ -79,12 +85,12 @@
 #' mtcars.ppr <- ppr(mpg ~ ., data = mtcars, nterms = 1)
 #'
 #' # Compute variable importance scores
-#' vi(mtcars.ppr, method = "ice")
-#' vi(mtcars.ppr, method = "ice",
+#' vi(mtcars.ppr, method = "firm", ice = TRUE)
+#' vi(mtcars.ppr, method = "firm", ice = TRUE,
 #'    var_fun = list("con" = mad, "cat" = function(x) diff(range(x)) / 4))
 #'
 #' # Plot variable importance scores
-#' vip(mtcars.ppr, method = "ice")
+#' vip(mtcars.ppr, method = "firm", ice = TRUE)
 vi <- function(object, ...) {
   UseMethod("vi")
 }
@@ -95,10 +101,11 @@ vi <- function(object, ...) {
 #' @export
 vi.default <- function(
   object,
-  method = c("model", "pdp", "ice", "permute"),
+  method = c("model", "firm", "permute", "shap"),
   feature_names = NULL,
   FUN = NULL,  # deprecated
   var_fun = NULL,
+  ice = FALSE,
   abbreviate_feature_names = NULL,
   sort = TRUE,
   decreasing = TRUE,
@@ -107,28 +114,31 @@ vi.default <- function(
   ...
 ) {
 
+  # Construct VI scores
+  method <- match.arg(method)
+  if (method == "firm") {
+    if (is.null(feature_names)) {
+      feature_names <- get_feature_names(object)
+    }
+  }
+
   # Catch deprecated arguments
   if (!is.null(FUN)) {
     stop("Argument `FUN` is deprecated; please use `var_fun` instead.",
          call. = FALSE)
   }
-
-  # Construct VI scores
-  method <- match.arg(method)
   if (method %in% c("pdp", "ice")) {
-    if (missing(feature_names)) {
-      feature_names <- get_feature_names(object)
-    }
+    stop("Methods \"pdp\" and \"ice\" are deprecated; use `method = \"firm\"` ",
+         "instead. See `?vip::vi_firm` for details.", call. = FALSE)
   }
 
   # Construct tibble of VI scores
   tib <- switch(method,
     "model" = vi_model(object, ...),
-    "pdp" = vi_pdp(object, feature_names = feature_names,
-                   var_fun = var_fun, ...),
-    "ice" = vi_ice(object, feature_names = feature_names,
-                   var_fun = var_fun, ...),
-    vi_permute(object, feature_names = feature_names, ...)
+    "firm" = vi_firm(object, feature_names = feature_names, var_fun = var_fun,
+                     ice = ice, ...),
+    "permute" = vi_permute(object, feature_names = feature_names, ...),
+    vi_shap(object, feature_names = feature_names, ...)
   )
 
   # Save attribute
@@ -161,10 +171,40 @@ vi.default <- function(
   attr(tib, which = "type") <- vi_type
 
   # Add "vi" class
-  class(tib) <- c("vi", class(tib))
+  if (!inherits(tib, what = "vi")) {  # In case class gets stripped?
+    class(tib) <- c("vi", class(tib))
+  }
 
   # Return results
   tib
 
 }
 
+
+#' @rdname vi
+#'
+#' @export
+vi.model_fit <- function(object, ...) {  # package: parsnip
+  vi(object$fit, ...)
+}
+
+
+#' @rdname vi
+#'
+#' @export
+vi.WrappedModel <- function(object, ...) {  # package: mlr
+  vi(object$learner.model, ...)
+}
+
+
+#' @rdname vi
+#'
+#' @export
+vi.Learner <- function(object, ...) {  # package: mlr3
+  if (is.null(object$model)) {
+    stop("No fitted model found. Did you forget to call ",
+         deparse(substitute(object)), "$train()?",
+         call. = FALSE)
+  }
+  vi(object$model, ...)
+}

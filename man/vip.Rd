@@ -3,49 +3,75 @@
 \name{vip}
 \alias{vip}
 \alias{vip.default}
-\title{Variable Importance Plots}
+\alias{vip.model_fit}
+\title{Variable importance plots}
 \usage{
 vip(object, ...)
 
-\method{vip}{default}(object, num_features = 10L, bar = TRUE,
-  width = 0.75, horizontal = TRUE, alpha = 1, color = "grey35",
-  fill = "grey35", size = 1, shape = 19, all_permutations = FALSE,
-  jitter = FALSE, ...)
+\method{vip}{default}(
+  object,
+  num_features = 10L,
+  geom = c("col", "point", "boxplot", "violin"),
+  mapping = NULL,
+  aesthetics = list(),
+  horizontal = TRUE,
+  all_permutations = FALSE,
+  jitter = FALSE,
+  include_type = FALSE,
+  ...,
+  bar = NULL,
+  width = NULL,
+  alpha = NULL,
+  color = NULL,
+  fill = NULL,
+  size = NULL,
+  shape = NULL
+)
+
+\method{vip}{model_fit}(object, ...)
 }
 \arguments{
 \item{object}{A fitted model object (e.g., a \code{"randomForest"} object) or
 an object that inherits from class \code{"vi"}.}
 
-\item{...}{Additional optional arguments to be passed onto \code{\link{vi}}.}
+\item{...}{Additional optional arguments to be passed on to \code{\link{vi}}.}
 
 \item{num_features}{Integer specifying the number of variable importance
 scores to plot. Default is \code{10}.}
 
-\item{bar}{Logical indicating whether or not to produce a barplot. Default
-is \code{TRUE}. If \code{bar = FALSE}, then a dotchart is displayed instead.}
+\item{geom}{Character string specifying which type of plot to construct.
+The currently available options are described below.
 
-\item{width}{Numeric value specifying the width of the bars when
-\code{bar = TRUE}. Default is \code{0.75}.}
+ \itemize{
+
+ \item \code{geom = "col"} uses \code{\link[ggplot2]{geom_col}} to construct
+ a bar chart of the variable importance scores.
+
+ \item \code{geom = "point"} uses \code{\link[ggplot2]{geom_point}} to
+ construct a Cleveland dot plot of the variable importance scores.
+
+ \item \code{geom = "boxplot"} uses \code{\link[ggplot2]{geom_boxplot}} to
+ construct a boxplot plot of the variable importance scores. This option can
+ only for the permutation-based importance method with \code{nsim > 1} and
+ \code{keep = TRUE}; see \code{\link{vi_permute}} for details.
+
+ \item \code{geom = "violin"} uses \code{\link[ggplot2]{geom_violin}} to
+ construct a violin plot of the variable importance scores. This option can
+ only for the permutation-based importance method with \code{nsim > 1} and
+ \code{keep = TRUE}; see \code{\link{vi_permute}} for details.
+
+ }}
+
+\item{mapping}{Set of aesthetic mappings created by \code{\link[ggplot2]{aes}}
+or \code{\link[ggplot2]{aes_}}. See example usage below.}
+
+\item{aesthetics}{List specifying additional arguments passed on to
+\code{\link[ggplot2]{layer}}. These are often aesthetics, used to set an
+aesthetic to a fixed value, like \code{colour = "red"} or \code{size = 3}.
+See example usage below.}
 
 \item{horizontal}{Logical indicating whether or not to plot the importance
 scores on the x-axis (\code{TRUE}). Default is \code{TRUE}.}
-
-\item{alpha}{Numeric value between 0 and 1 giving the transparency of the
-bars (\code{bar = TRUE}) or points (\code{bar = FALSE}).}
-
-\item{color}{Character string specifying the color to use for the borders of
-the bars. Could also be a function, such as
-\code{\link[grDevices]{heat.colors}}. Default is \code{"grey35"}.}
-
-\item{fill}{Character string specifying the color to use to fill the bars.
-Could also be a function, such as \code{\link[grDevices]{heat.colors}}.
-Default is \code{"grey35"}.}
-
-\item{size}{Numeric value indicating the size to use for the points whenever
-\code{bar = FALSE}. Default is \code{1}.}
-
-\item{shape}{Numeric value indicating the shape to use for the points
-whenever \code{bar = FALSE}. Default is \code{1}.}
 
 \item{all_permutations}{Logical indicating whether or not to plot all
 permutation scores along with the average. Default is \code{FALSE}. (Only
@@ -54,6 +80,47 @@ used for permutation scores when \code{nsim > 1}.)}
 \item{jitter}{Logical indicating whether or not to jitter the raw permutation
 scores. Default is \code{FALSE}. (Only used when
 \code{all_permutations = TRUE}.)}
+
+\item{include_type}{Logical indicating whether or not to include the type of
+variable importance computed in the axis label. Default is \code{FALSE}.}
+
+\item{bar}{Logical indicating whether or not to produce a barplot. Default is
+\code{NULL}. \strong{WARNING:} This argument has been deprecated in favor of
+the new \code{mapping} and \code{aesthetics} arguments. It will be removed in
+version 0.3.0.}
+
+\item{width}{Numeric value specifying the width of the bars when
+\code{bar = TRUE}. Default is \code{NULL}. \strong{WARNING:} This argument
+has been deprecated in favor of the new \code{mapping} and \code{aesthetics}
+arguments. It will be removed in version 0.3.0.}
+
+\item{alpha}{Numeric value between 0 and 1 giving the transparency of the
+bars (\code{bar = TRUE}) or points (\code{bar = FALSE}). \strong{WARNING:}
+This argument has been deprecated in favor of the new \code{mapping} and
+\code{aesthetics} arguments. It will be removed in version 0.3.0.}
+
+\item{color}{Character string specifying the color to use for the borders of
+the bars. Could also be a function, such as
+\code{\link[grDevices]{heat.colors}}. Default is \code{NULL}.
+\strong{WARNING:} This argument has been deprecated in favor of the new
+\code{mapping} and \code{aesthetics} arguments. It will be removed in version
+0.3.0.}
+
+\item{fill}{Character string specifying the color to use to fill the bars.
+Could also be a function, such as \code{\link[grDevices]{heat.colors}}.
+Default is \code{NULL}. \strong{WARNING:} This argument has been deprecated
+in favor of the new \code{mapping} and \code{aesthetics} arguments. It will be
+removed in version 0.3.0.}
+
+\item{size}{Numeric value indicating the size to use for the points whenever
+\code{bar = FALSE}. Default is \code{NULL}. \strong{WARNING:} This argument
+has been deprecated in favor of the new \code{mapping} and \code{aesthetics}
+arguments. It will be removed in version 0.3.0.}
+
+\item{shape}{Numeric value indicating the shape to use for the points
+whenever \code{bar = FALSE}. Default is \code{NULL}. \strong{WARNING:} This
+argument has been deprecated in favor of the new \code{mapping} and
+\code{aesthetics} arguments. It will be removed in version 0.3.0.}
 }
 \description{
 Plot variable importance scores for the predictors in a model.
@@ -70,20 +137,35 @@ data(mtcars)
 model <- ppr(mpg ~ ., data = mtcars, nterms = 1)
 
 # Construct variable importance plot
-vip(model, method = "ice")
+vip(model, method = "firm")
 
 # Better yet, store the variable importance scores and then plot
-vi_scores <- vi(model, method = "ice")
-vip(vi_scores, bar = FALSE, size = 3, horiz = FALSE)
+vi_scores <- vi(model, method = "firm")
+vip(vi_scores, geom = "point", horiz = FALSE)
+vip(vi_scores, geom = "point", horiz = FALSE, aesthetics = list(size = 3))
 
-# The \\code{\\link[magrittr]{\\\%T>\\\%}} operator is imported for convenience
+# The `\%T>\\%` operator is imported for convenience; see ?magrittr::`\%T>\%`
+# for details
 vi_scores <- model \%>\%
-  vi(method = "ice") \%T>\%
+  vi(method = "firm") \%T>\%
   {print(vip(.))}
 vi_scores
 
-# Permutation scores
+# Permutation scores (barplot w/ raw values and jittering)
+pfun <- function(object, newdata) predict(object, newdata = newdata)
 vip(model, method = "permute", train = mtcars, target = "mpg", nsim = 10,
-    metric = "rmse", bar = FALSE, color = "red", size = 3,
-    all_permutations = TRUE, jitter = FALSE)
+    metric = "rmse", pred_wrapper = pfun,
+    aesthetics = list(color = "grey50", fill = "grey50"),
+    all_permutations = TRUE, jitter = TRUE)
+
+# Permutation scores (boxplot)
+vip(model, method = "permute", train = mtcars, target = "mpg", nsim = 10,
+    metric = "rmse", pred_wrapper = pfun, geom = "boxplot")
+
+# Permutation scores (boxplot colored by feature)
+library(ggplot2)  # for `aes_string()` function
+vip(model, method = "permute", train = mtcars, target = "mpg", nsim = 10,
+    metric = "rmse", pred_wrapper = pfun, geom = "boxplot",
+    all_permutations = TRUE, mapping = aes_string(fill = "Variable"),
+    aesthetics = list(color = "grey35", size = 0.8))
 }

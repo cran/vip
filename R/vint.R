@@ -1,7 +1,8 @@
-#' Interaction Effects
+#' Interaction effects
 #'
-#' Compute the strength of two-way interaction effects. For details, see the
-#' reference below.
+#' Quantify the strength of two-way interaction effects using a simple
+#' \emph{feature importance ranking measure} (FIRM) approach. For details, see
+#' \href{https://arxiv.org/abs/1805.04755}{Greenwell et al. (2018)}.
 #'
 #' @param object A fitted model object (e.g., a \code{"randomForest"} object).
 #'
@@ -17,10 +18,10 @@
 #' parallel using a backend provided by the \code{foreach} package. Default is
 #' \code{FALSE}.
 #'
-#' @param paropts List containing additional options to be passed onto
+#' @param paropts List containing additional options to be passed on to
 #' \code{\link[foreach]{foreach}} when \code{parallel = TRUE}.
 #'
-#' @param ... Additional optional arguments to be passed onto
+#' @param ... Additional optional arguments to be passed on to
 #' \code{\link[pdp]{partial}}.
 #'
 #' @details This function quantifies the strength of interaction between
@@ -47,9 +48,8 @@
 #' library(ggplot2)
 #' library(mlbench)
 #'
-#' # Generate training data
-#' set.seed(101)  # for reproducibility
-#' friedman1 <- as.data.frame(mlbench.friedman1(500, sd = 0.1))
+#' # Simulate training data
+#' trn <- gen_friedman(500, seed = 101)  # ?vip::gen_friedman
 #'
 #' #
 #' # NOTE: The only interaction that actually occurs in the model from which
@@ -58,9 +58,9 @@
 #'
 #' # Fit a GBM to the training data
 #' set.seed(102)  # for reproducibility
-#' fit <- gbm(y ~ ., data = friedman1, distribution = "gaussian",
-#'            n.trees = 1000, interaction.depth = 2, shrinkage = 0.01,
-#'            bag.fraction = 0.8, cv.folds = 5)
+#' fit <- gbm(y ~ ., data = trn, distribution = "gaussian", n.trees = 1000,
+#'            interaction.depth = 2, shrinkage = 0.01, bag.fraction = 0.8,
+#'            cv.folds = 5)
 #' best_iter <- gbm.perf(fit, plot.it = FALSE, method = "cv")
 #'
 #' # Quantify relative interaction strength
@@ -72,7 +72,7 @@
 #' }
 #'
 #' # Plot top 20 results
-#' top_20 <- res[1:20, ]
+#' top_20 <- res[1L:20L, ]
 #' ggplot(top_20, aes(x = reorder(Variables, Interaction), y = Interaction)) +
 #'   geom_col() +
 #'   coord_flip() +

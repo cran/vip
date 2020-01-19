@@ -3,16 +3,31 @@
 \name{vi_permute}
 \alias{vi_permute}
 \alias{vi_permute.default}
-\title{Permutation-Based Variable Importance}
+\title{Permutation-based variable importance}
 \usage{
 vi_permute(object, ...)
 
-\method{vi_permute}{default}(object, feature_names = NULL, train, target,
-  metric = "auto", smaller_is_better = NULL, type = c("difference",
-  "ratio"), nsim = 1, keep = TRUE, sample_size = NULL,
-  sample_frac = NULL, reference_class = NULL, pred_fun = NULL,
-  pred_wrapper = NULL, verbose = FALSE, progress = "none",
-  parallel = FALSE, paropts = NULL, ...)
+\method{vi_permute}{default}(
+  object,
+  feature_names = NULL,
+  train = NULL,
+  target = NULL,
+  metric = NULL,
+  smaller_is_better = NULL,
+  type = c("difference", "ratio"),
+  nsim = 1,
+  keep = TRUE,
+  sample_size = NULL,
+  sample_frac = NULL,
+  reference_class = NULL,
+  pred_fun = NULL,
+  pred_wrapper = NULL,
+  verbose = FALSE,
+  progress = "none",
+  parallel = FALSE,
+  paropts = NULL,
+  ...
+)
 }
 \arguments{
 \item{object}{A fitted model object (e.g., a \code{"randomForest"} object).}
@@ -20,10 +35,14 @@ vi_permute(object, ...)
 \item{...}{Additional optional arguments. (Currently ignored.)}
 
 \item{feature_names}{Character string giving the names of the predictor
-variables (i.e., features) of interest.}
+variables (i.e., features) of interest. If \code{NULL} (the default) then the
+internal `get_feature_names()` function will be called to try and extract
+them automatically. It is good practice to always specify this argument.}
 
 \item{train}{A matrix-like R object (e.g., a data frame or matrix)
-containing the training data.}
+containing the training data. If \code{NULL} (the default) then the
+internal `get_training_data()` function will be called to try and extract it
+automatically. It is good practice to always specify this argument.}
 
 \item{target}{Either a character string giving the name (or position) of the
 target column in \code{train} or, if \code{train} only contains feature
@@ -35,7 +54,7 @@ regression or accuracy for binary classification). If \code{metric} is a
 function, then it requires two arguments, \code{actual} and \code{predicted},
 and should return a single, numeric value. Ideally, this should be the same
 metric that was used to train \code{object}. See \code{\link{list_metrics}}
-for a list of available metrics.}
+for a list of built-in metrics.}
 
 \item{smaller_is_better}{Logical indicating whether or not a smaller value
 of \code{metric} is better. Default is \code{NULL}. Must be supplied if
@@ -71,11 +90,9 @@ problems.}
 
 \item{pred_fun}{Deprecated. Use \code{pred_wrapper} instead.}
 
-\item{pred_wrapper}{Optional prediction function that requires two arguments,
-\code{object} and \code{newdata}. Default is \code{NULL}. Must be supplied
-whenever \code{metric} is a custom function. In fact, it is good practice to
-always supply this function! The output of this function should be determined
-by the metric being used:
+\item{pred_wrapper}{Prediction function that requires two arguments,
+\code{object} and \code{newdata}. The output of this function should be
+determined by the \code{metric} being used:
 
 \describe{
   \item{Regression}{A numeric vector of predicted outcomes.}
@@ -99,7 +116,7 @@ in parallel (using a backend provided by the \code{foreach} package). Default
 is \code{FALSE}. If \code{TRUE}, an appropriate backend must be provided by
 \code{foreach}.}
 
-\item{paropts}{List containing additional options to be passed onto
+\item{paropts}{List containing additional options to be passed on to
 \code{foreach} when \code{parallel = TRUE}.}
 }
 \value{
@@ -108,7 +125,7 @@ A tidy data frame (i.e., a \code{"tibble"} object) with two columns:
 }
 \description{
 Compute permutation-based variable importance scores for the predictors in a
-model. (This function is meant for internal use only.)
+model.
 }
 \details{
 Coming soon!
@@ -117,12 +134,10 @@ Coming soon!
 \dontrun{
 # Load required packages
 library(ggplot2)  # for ggtitle() function
-library(mlbench)  # for ML benchmark data sets
 library(nnet)     # for fitting neural networks
 
 # Simulate training data
-set.seed(101)  # for reproducibility
-trn <- as.data.frame(mlbench.friedman1(500))  # ?mlbench.friedman1
+trn <- gen_friedman(500, seed = 101)  # ?vip::gen_friedman
 
 # Inspect data
 tibble::as.tibble(trn)

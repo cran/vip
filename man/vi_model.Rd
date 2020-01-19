@@ -13,11 +13,15 @@
 \alias{vi_model.H2OBinomialModel}
 \alias{vi_model.H2OMultinomialModel}
 \alias{vi_model.H2ORegressionModel}
+\alias{vi_model.WrappedModel}
+\alias{vi_model.Learner}
 \alias{vi_model.nn}
 \alias{vi_model.nnet}
+\alias{vi_model.model_fit}
 \alias{vi_model.RandomForest}
 \alias{vi_model.constparty}
 \alias{vi_model.cforest}
+\alias{vi_model.mvr}
 \alias{vi_model.randomForest}
 \alias{vi_model.ranger}
 \alias{vi_model.rpart}
@@ -46,8 +50,7 @@ vi_model(object, ...)
 
 \method{vi_model}{earth}(object, type = c("nsubsets", "rss", "gcv"), ...)
 
-\method{vi_model}{gbm}(object, type = c("relative.influence",
-  "permutation"), ...)
+\method{vi_model}{gbm}(object, type = c("relative.influence", "permutation"), ...)
 
 \method{vi_model}{glmnet}(object, ...)
 
@@ -59,15 +62,23 @@ vi_model(object, ...)
 
 \method{vi_model}{H2ORegressionModel}(object, ...)
 
+\method{vi_model}{WrappedModel}(object, ...)
+
+\method{vi_model}{Learner}(object, ...)
+
 \method{vi_model}{nn}(object, type = c("olden", "garson"), ...)
 
 \method{vi_model}{nnet}(object, type = c("olden", "garson"), ...)
+
+\method{vi_model}{model_fit}(object, ...)
 
 \method{vi_model}{RandomForest}(object, type = c("accuracy", "auc"), ...)
 
 \method{vi_model}{constparty}(object, ...)
 
 \method{vi_model}{cforest}(object, ...)
+
+\method{vi_model}{mvr}(object, ...)
 
 \method{vi_model}{randomForest}(object, ...)
 
@@ -93,15 +104,14 @@ vi_model(object, ...)
 
 \method{vi_model}{ml_model_random_forest_classification}(object, ...)
 
-\method{vi_model}{lm}(object, ...)
+\method{vi_model}{lm}(object, type = c("stat", "raw"), ...)
 
-\method{vi_model}{xgb.Booster}(object, type = c("gain", "cover",
-  "frequency"), ...)
+\method{vi_model}{xgb.Booster}(object, type = c("gain", "cover", "frequency"), ...)
 }
 \arguments{
 \item{object}{A fitted model object (e.g., a \code{"randomForest"} object).}
 
-\item{...}{Additional optional arguments.}
+\item{...}{Additional optional arguments to be passed on to other methods.}
 
 \item{type}{Character string specifying the type of variable importance to
 return (only used for some models). See details for which methods this
@@ -115,7 +125,7 @@ sign (i.e., POS/NEG) of the original coefficient.
 }
 \description{
 Compute model-specific variable importance scores for the predictors in a
-model. (This function is meant for internal use only.)
+model.
 }
 \details{
 Computes model-specific variable importance scores depending on the class of
@@ -186,6 +196,7 @@ procedure described in Hapfelmeier et al. (2012) is performed. See
 three criteria for estimating the variable importance in a MARS model (see
 \code{\link[earth]{evimp}} for details):
 \itemize{
+
   \item The \code{nsubsets} criterion (\code{type = "nsubsets"}) counts the
   number of model subsets that include each feature. Variables that are
   included in more subsets are considered more important. This is the
@@ -215,6 +226,7 @@ three criteria for estimating the variable importance in a MARS model (see
   estimated predictive power on unseen data.) If that happens often enough,
   the variable can have a negative total importance, and thus appear less
   important than unused variables.
+
 }}
 
 \item{\code{\link[gbm]{gbm}}}{Variable importance is computed using one of
@@ -260,9 +272,11 @@ slow for large networks.. To implement the Olden and Garson algorithms, use
 for details.}
 
 \item{\code{\link[stats]{lm}}}{In (generalized) linear models, variable
-importance is based on the absolute value of the corresponding
+importance is typically based on the absolute value of the corresponding
 \emph{t}-statistics. For such models, the sign of the original coefficient
-is also returned.}
+is also returned. By default, \code{type = "stat"} is used; however, if the
+inputs have been appropriately standardized then the raw coefficients can be
+used with \code{type = "raw"}.}
 
 \item{\code{\link[sparklyr]{ml_feature_importances}}}{The Spark ML
 library provides standard variable importance for tree-based methods (e.g.,
@@ -278,7 +292,8 @@ variable. The difference between the two are then averaged over all trees in
 the forest, and normalized by the standard deviation of the differences. If
 the standard deviation of the differences is equal to 0 for a variable,
 the division is not done (but the average is almost always equal to 0 in that
-case).
+case). See \code{\link[randomForest]{importance}} for details, including
+additional arguments that can be passed via the \code{...} argument.
 
 The second measure is the total decrease in node impurities from splitting on
 the variable, averaged over all trees. For classification, the node impurity
@@ -316,9 +331,22 @@ reason, in order to obtain a meaningful ranking by importance for a linear
 model, the features need to be on the same scale (which you also would want
 to do when using either L1 or L2 regularization). Otherwise, the approach
 described in Friedman (2001) for \code{\link[gbm]{gbm}}s is used. See
-\code{\link[xgboost]{xgb.importance}} for details. If \code{type = NULL} (the
-default), \code{"Gain"} is used. See \code{\link[xgboost]{xgb.importance}}
-for details.}
+\code{\link[xgboost]{xgb.importance}} for details. For tree models, you can
+obtain three different types of variable importance:
+\itemize{
+
+  \item Using \code{type = "gain"} (the default) gives the fractional
+  contribution of each feature to the model based on the total gain of the
+  corresponding feature's splits.
+
+  \item Using \code{type = "cover"} gives the number of observations related
+  to each feature.
+
+  \item Using \code{type = "frequency"} gives the percentages representing
+  the relative number of times each feature has been used throughout each
+  tree in the ensemble.
+
+}}
 
 }
 }
