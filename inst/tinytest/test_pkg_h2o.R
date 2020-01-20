@@ -2,6 +2,9 @@
 if (!requireNamespace("h2o", quietly = TRUE)) {
   exit_file("Package h2o missing")
 }
+if (length(unclass(packageVersion("vip"))[[1L]]) == 3) {
+  exit_file("Skip h2o tests for CRAN releases")
+}
 
 # Load required packages
 suppressMessages({

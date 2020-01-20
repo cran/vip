@@ -1,4 +1,4 @@
-5795302790aebf10fd2f611255bda5d7 *DESCRIPTION
+6ccb07db3893629844303e7ad75ad7ba *DESCRIPTION
 3a6339028b0c89a2a33a7fc285721dfd *NAMESPACE
 1d3d8b23ad995d821699f0a2d3342441 *NEWS.md
 3f968a8189d9b38a3e038f0d26c151eb *R/add_sparklines.R
@@ -23,7 +23,7 @@ cc33ad0c09944cc43197d26a4a93ebaa *inst/tinytest/test_pkg_Cubist.R
 72c36187f1ac3df09977c88f77c162e6 *inst/tinytest/test_pkg_earth.R
 04bd28fe62b6b5e5bab1ed7431523ad7 *inst/tinytest/test_pkg_gbm.R
 8debfa5bf5344298231aaecb25dbaa2a *inst/tinytest/test_pkg_glmnet.R
-d24dae2c4e7beb343007fefa88ffa3e7 *inst/tinytest/test_pkg_h2o.R
+970c5905a61e9a3b63a5548314f811f9 *inst/tinytest/test_pkg_h2o.R
 aec94507ceb49dfcd5dd2d0f45bfdfc7 *inst/tinytest/test_pkg_mlr.R
 4b373518512082387fe150968c9a4d30 *inst/tinytest/test_pkg_mlr3.R
 6b215d8cff7a406aaf97b02e7f58bd16 *inst/tinytest/test_pkg_neuralnet.R
@@ -62,7 +62,7 @@ b8a7213ca1bab51737485314915c8f24 *man/vi_firm.Rd
 3553524aab2219be89c06d4c927d986b *man/vi_shap.Rd
 1f71003695d5a01b0b81bb0681e4ad83 *man/vint.Rd
 db2e65d089b58844d30bbd153a12e7c1 *man/vip.Rd
-9daa164af67f5d338cd1ae72fd8a2f50 *tests/tinytest.R
+6ba6c940d4a2f3a95430e086af84b1ab *tests/tinytest.R
 02c2b6b58ad7a654c1e8aa9301e7438f *tools/logo-vip-img.png
 da024ba7bffc37cab8d48ea6c9d7ea2d *tools/logo-vip.R
 8c11e7910ea3d67eb706130af60cd7c4 *tools/logo-vip.svg
