@@ -1,6 +1,6 @@
-6ccb07db3893629844303e7ad75ad7ba *DESCRIPTION
+520641062c7ce17b85a3adbc6c6a9a2c *DESCRIPTION
 3a6339028b0c89a2a33a7fc285721dfd *NAMESPACE
-1d3d8b23ad995d821699f0a2d3342441 *NEWS.md
+44ee31d0a2d59d18be00b4ab0f93ea5c *NEWS.md
 3f968a8189d9b38a3e038f0d26c151eb *R/add_sparklines.R
 947057c933d192bac638947f2408f97f *R/gen_friedman.R
 fd2d0e6df612c5046f66b9d617a50a5c *R/get_feature_names.R
@@ -9,7 +9,7 @@ fd2d0e6df612c5046f66b9d617a50a5c *R/get_feature_names.R
 80664942ca77348fd7ad3862ad63d727 *R/utils.R
 4ce7632e0b9becc493f27de91b6ffa38 *R/vi.R
 bca40b29e8c2270fbeff9def8a817e20 *R/vi_firm.R
-7f959e747b584231b7207467c0c86255 *R/vi_model.R
+15951b988a004a1960b0a2c0b0ec7a1d *R/vi_model.R
 b6e45550d41defaaba8efc9ca5b98c59 *R/vi_permute.R
 7b6eb9842269448871622ed8ba8b2e29 *R/vi_shap.R
 977ddd229d22a28a56aef8aa86a5e9e9 *R/vint.R

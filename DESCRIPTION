@@ -1,7 +1,7 @@
 Package: vip
 Type: Package
 Title: Variable Importance Plots
-Version: 0.2.1
+Version: 0.2.2
 Authors@R: c(
   person("Brandon", "Greenwell", 
           email = "greenwell.brandon@gmail.com",
@@ -39,12 +39,12 @@ Suggests: DT, C50, caret, Ckmeans.1d.dp, covr, Cubist, doParallel,
         nnet, parsnip, party, partykit, pdp, pls, randomForest, ranger,
         rmarkdown, rpart, RSNNS, sparkline, sparklyr (>= 0.8.0),
         tinytest, varImp, xgboost
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.0
 NeedsCompilation: no
-Packaged: 2020-01-20 18:21:50 UTC; b780620
+Packaged: 2020-04-06 11:28:51 UTC; b780620
 Author: Brandon Greenwell [aut, cre] (<https://orcid.org/0000-0002-8120-0084>),
   Brad Boehmke [aut] (<https://orcid.org/0000-0002-3611-8516>),
   Bernie Gray [aut] (<https://orcid.org/0000-0001-9190-6032>)
 Maintainer: Brandon Greenwell <greenwell.brandon@gmail.com>
 Repository: CRAN
-Date/Publication: 2020-01-20 19:20:02 UTC
+Date/Publication: 2020-04-06 13:00:02 UTC
