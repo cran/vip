@@ -1,3 +1,36 @@
+# vip 0.3.2
+
+## Miscellaneous
+
+* Add `tools/` to `.Rbuildignore`.
+
+
+# vip 0.3.1
+
+## Miscellaneous
+
+* Change http://spark.rstudio.com/mlib/ to https://spark.rstudio.com/mlib/ in `NEWS.md`.
+
+* Remove unnecessary `codecov.yml` file.
+
+# vip 0.3.0
+
+## User-visable changes
+
+* Removed deprecated arguments from `vip()`; in particular, `bar`, `width`, `alpha`, `color`, `fill`, `size`, and `shape`. Users should instead rely on the `mapping` and `aesthetics` arguments; see `?vip::vip` for details.
+
+## Bug fixes
+
+* Fixed a couple bugs that occurred when using `vi_model()` with the [glmnet](https://cran.r-project.org/package=glmnet) package. In particular, we added a new `lamnda` parameter for specifying the value of the penalty term to use when extracting the estimated coefficients. This is equivalent to the `s` argument in `glmnet::coef()`; the name `lambda` was chosen to not conflict with other arguments in `vi()`. Additionally, `vi_model()` did not return the absolute value of the estimated coefficients for [glmnet](https://cran.r-project.org/package=glmnet) models like advertised, but is now fixed in this version [(#103)](https://github.com/koalaverse/vip/issues/103).
+
+## Miscellaneous
+
+* Switched from Travis-CI to GitHub Actions for continuous integration.
+
+* Added a CITATION file and PDF-based vignette based off of the published article in [The R Journal](https://journal.r-project.org/archive/2020/RJ-2020-013/index.html) [(#109)](https://github.com/koalaverse/vip/issues/109).
+
+* Switch from `tibble::as.tibble()`---which was deprecated in [tibble](https://github.com/tidyverse/tibble) 2.0.0---to `tibble::as_tibble()` in a few function calls [(#101)](https://github.com/koalaverse/vip/issues/101).
+
 # vip 0.2.2
 
 ## User-visible changes
@@ -18,7 +51,6 @@
 to use either (1) the raw coefficients if the features were properly standardized (`type = "raw"`), or (2) the absolute value of the corresponding *t*- or *z*-statistic (`type = "stat"`, the default) [(#77)](https://github.com/koalaverse/vip/issues/77).
 
 * New function `gen_friedman()` for simulating data from the Friedman 1 benchmark problem; see `?vip::gen_friedman` for details.
-
 
 ## User-visible changes
 
@@ -138,7 +170,7 @@ grid.arrange(p1, p2, p3, p4, nrow = 2)
 
 * New vignette on using `vip` with unsupported models (using the Keras API to TensorFlow as an example).
 
-* Added basic [sparklyr](http://spark.rstudio.com/mlib/) support.
+* Added basic [sparklyr](https://spark.rstudio.com/mlib/) support.
 
 
 # vip 0.1.0
