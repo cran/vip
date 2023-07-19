@@ -1,6 +1,6 @@
 # Exits
 if (!requireNamespace("randomForest", quietly = TRUE)) {
-  exit_file("Package randomForest missing")
+  exit_file("Package 'randomForest' missing")
 }
 
 # # Load required packages
@@ -48,16 +48,6 @@ expect_identical(
   target = unname(fit4$importance[, "MeanDecreaseGini", drop = TRUE])
 )
 
-# Expectations for `get_training_data()`
-expect_identical(
-  current = vip:::get_training_data.randomForest(fit1),
-  target = friedman1
-)
-expect_identical(  # NOTE: Only x is passed in this call
-  current = vip:::get_training_data.randomForest(fit3),
-  target = subset(friedman1, select = -y)
-)
-
 # Expectations for `get_feature_names()`
 expect_identical(
   current = vip:::get_feature_names.randomForest(fit1),
@@ -66,22 +56,4 @@ expect_identical(
 expect_identical(
   current = vip:::get_feature_names.randomForest(fit3),
   target = paste0("x", 1L:10L)
-)
-
-# Call `vip::vip()` directly
-p <- vip(fit4, method = "model", type = 1, include_type = TRUE)
-
-# Expect `p` to be a `"gg" "ggplot"` object
-expect_identical(
-  current = class(p),
-  target = c("gg", "ggplot")
-)
-
-# Display VIPs side by side
-grid.arrange(
-  vip(vis1, include_type = TRUE),
-  vip(vis2, include_type = TRUE),
-  vip(vis4, include_type = TRUE),
-  p,
-  nrow = 2
 )

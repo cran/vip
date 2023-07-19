@@ -1,20 +1,16 @@
 Package: vip
 Type: Package
 Title: Variable Importance Plots
-Version: 0.3.2
+Version: 0.4.0
 Authors@R: c(
-  person("Brandon", "Greenwell", 
-          email = "greenwell.brandon@gmail.com",
-          role = c("aut", "cre"), 
-          comment = c(ORCID = "0000-0002-8120-0084")),
+  person(c("Brandon", "M."), family = "Greenwell", 
+         email = "greenwell.brandon@gmail.com",
+         role = c("aut", "cre"), 
+         comment = c(ORCID = "0000-0002-8120-0084")),
   person("Brad", "Boehmke",
          email = "bradleyboehmke@gmail.com",
          role = c("aut"),
-         comment = c(ORCID = "0000-0002-3611-8516")),
-  person("Bernie", "Gray",
-         email = "bfgray3@gmail.com",
-         role = c("aut"),
-         comment = c(ORCID = "0000-0001-9190-6032"))
+         comment = c(ORCID = "0000-0002-3611-8516"))
   )
 Description: A general framework for constructing variable importance plots from 
   various types of machine learning models in R. Aside from some standard model-
@@ -27,25 +23,27 @@ Description: A general framework for constructing variable importance plots from
   variance-based method for quantifying the relative strength of interaction 
   effects is also included (see the previous reference for details).
 License: GPL (>= 2)
-URL: https://github.com/koalaverse/vip/
+URL: https://github.com/koalaverse/vip/,
+        https://koalaverse.github.io/vip/
 BugReports: https://github.com/koalaverse/vip/issues
 Encoding: UTF-8
 VignetteBuilder: knitr
+Depends: R (>= 4.1.0)
+Imports: foreach, ggplot2 (>= 0.9.0), stats, tibble, utils, yardstick
+Suggests: bookdown, DT, covr, doParallel, dplyr, fastshap (>= 0.1.0),
+        knitr, lattice, mlbench, modeldata, NeuralNetTools, pdp,
+        rmarkdown, tinytest (>= 1.4.1), varImp
+Enhances: C50, caret, Cubist, earth, gbm, glmnet, h2o, lightgbm,
+        mixOmics, mlr, mlr3, neuralnet, nnet, parsnip (>= 0.1.7),
+        party, partykit, pls, randomForest, ranger, rpart, RSNNS,
+        sparklyr (>= 0.8.0), tidymodels, workflows (>= 0.2.3), xgboost
 LazyData: true
-Imports: ggplot2 (>= 0.9.0), gridExtra, magrittr, plyr, stats, tibble,
-        utils
-Suggests: DT, C50, caret, Ckmeans.1d.dp, covr, Cubist, doParallel,
-        dplyr, earth, fastshap, gbm, glmnet, h2o, htmlwidgets, keras,
-        knitr, lattice, mlbench, mlr, mlr3, neuralnet, NeuralNetTools,
-        nnet, parsnip, party, partykit, pdp, pls, randomForest, ranger,
-        rmarkdown, rpart, RSNNS, sparkline, sparklyr (>= 0.8.0),
-        tinytest, varImp, xgboost
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.3
 NeedsCompilation: no
-Packaged: 2020-12-17 15:29:07 UTC; Brandon
-Author: Brandon Greenwell [aut, cre] (<https://orcid.org/0000-0002-8120-0084>),
-  Brad Boehmke [aut] (<https://orcid.org/0000-0002-3611-8516>),
-  Bernie Gray [aut] (<https://orcid.org/0000-0001-9190-6032>)
-Maintainer: Brandon Greenwell <greenwell.brandon@gmail.com>
+Packaged: 2023-07-17 14:47:57 UTC; bgreenwell
+Author: Brandon M. Greenwell [aut, cre]
+    (<https://orcid.org/0000-0002-8120-0084>),
+  Brad Boehmke [aut] (<https://orcid.org/0000-0002-3611-8516>)
+Maintainer: Brandon M. Greenwell <greenwell.brandon@gmail.com>
 Repository: CRAN
-Date/Publication: 2020-12-17 16:20:02 UTC
+Date/Publication: 2023-07-19 09:00:02 UTC

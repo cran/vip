@@ -1,13 +1,16 @@
 
 # vip: Variable Importance Plots <img src="man/figures/logo-vip.png" align="right" width="130" height="150" />
 
-[![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/vip)](https://cran.r-project.org/package=vip)
-[![R build
-status](https://github.com/koalaverse/vip/workflows/R-CMD-check/badge.svg)](https://github.com/koalaverse/vip/actions)
+<!-- badges: start -->
+
+[![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/vip)](https://cran.r-project.org/package=vip)
+[![R-CMD-check](https://github.com/koalaverse/vip/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/koalaverse/vip/actions/workflows/R-CMD-check.yaml)
 [![Coverage
-Status](https://img.shields.io/codecov/c/github/koalaverse/vip/master.svg)](https://codecov.io/github/koalaverse/vip?branch=master)
-[![Lifecycle:
-maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
+Status](https://codecov.io/gh/koalaverse/vip/graph/badge.svg)](https://app.codecov.io/github/koalaverse/vip?branch=master)
+[![Downloads](https://cranlogs.r-pkg.org/badges/vip)](https://cran.r-project.org/package=vip/)
+[![The R
+Journal](https://img.shields.io/badge/The%20R%20Journal-10.32614%2FRJ--2020--013-brightgreen)](https://doi.org/10.32614/RJ-2020-013)
+<!-- badges: end -->
 
 ## Overview
 
@@ -44,35 +47,34 @@ website](https://koalaverse.github.io/vip/index.html).
 
 ## Features
 
-  - **Model-based variable importance** - Compute variable importance
-    specific to a particular model (like a *random forest*, *gradient
-    boosted decision trees*, or *multivariate adaptive regression
-    splines*) from a wide range of R packages (e.g.,
-    [randomForest](https://cran.r-project.org/package=randomForest),
-    [ranger](https://cran.r-project.org/package=ranger),
-    [xgboost](https://cran.r-project.org/package=xgboost), and many
-    more). Also supports the
-    [caret](https://cran.r-project.org/package=caret) and
-    [parsnip](https://cran.r-project.org/package=parsnip) (starting with
-    version 0.0.4) packages.
+- **Model-based variable importance** - Compute variable importance
+  specific to a particular model (like a *random forest*, *gradient
+  boosted decision trees*, or *multivariate adaptive regression
+  splines*) from a wide range of R packages (e.g.,
+  [randomForest](https://cran.r-project.org/package=randomForest),
+  [ranger](https://cran.r-project.org/package=ranger),
+  [xgboost](https://cran.r-project.org/package=xgboost), and many more).
+  Also supports the [caret](https://cran.r-project.org/package=caret)
+  and [parsnip](https://cran.r-project.org/package=parsnip) (starting
+  with version 0.0.4) packages.
 
-  - **Permutation-based variable importance** - An efficient
-    implementation of the permutation feature importance algorithm
-    discussed in [this
-    chapter](https://christophm.github.io/interpretable-ml-book/feature-importance.html)
-    from [Christoph Molnar’s *Interpretable Machine Learning*
-    book](https://christophm.github.io/interpretable-ml-book/).
+- **Permutation-based variable importance** - An efficient
+  implementation of the permutation feature importance algorithm
+  discussed in [this
+  chapter](https://christophm.github.io/interpretable-ml-book/feature-importance.html)
+  from [Christoph Molnar’s *Interpretable Machine Learning*
+  book](https://christophm.github.io/interpretable-ml-book/).
 
-  - **Shapley-based variable importance** - An efficient implementation
-    of feature importance based on the popular [Shapley
-    values](https://github.com/slundberg/shap) via the
-    [fastshap](https://cran.r-project.org/package=fastshap) package.
+- **Shapley-based variable importance** - An efficient implementation of
+  feature importance based on the popular [Shapley
+  values](https://github.com/slundberg/shap) via the
+  [fastshap](https://cran.r-project.org/package=fastshap) package.
 
-  - **Variance-based variable importance** - Compute variable importance
-    using a simple *feature importance ranking measure* (FIRM) approach.
-    For details, see see [Greenwell et
-    al. (2018)](https://arxiv.org/abs/1805.04755) and [Scholbeck et
-    al. (2019)](https://arxiv.org/abs/1904.03959).
+- **Variance-based variable importance** - Compute variable importance
+  using a simple *feature importance ranking measure* (FIRM) approach.
+  For details, see see [Greenwell et
+  al. (2018)](https://arxiv.org/abs/1805.04755) and [Scholbeck et
+  al. (2019)](https://arxiv.org/abs/1904.03959).
 
 ## Installation
 

@@ -6,10 +6,22 @@
 \usage{
 list_metrics()
 }
+\value{
+A data frame with the following columns:
+\itemize{
+\item \code{metric} - the optimization or tuning metric;
+\item \code{description} - a brief description about the metric;
+\item \code{task} - whether the metric is suitable for regression or classification;
+\item \code{smaller_is_better} - logical indicating whether or not a smaller value of
+the metric is considered better.
+\item \code{yardstick_function} - the name of the corresponding function from the
+\link[yardstick:yardstick-package]{yardstick} package.
+}
+}
 \description{
 List all available performance metrics.
 }
 \examples{
 (metrics <- list_metrics())
-metrics[metrics$Task == "Multiclass classification", ]
+metrics[metrics$task == "Multiclass classification", ]
 }

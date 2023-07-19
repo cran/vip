@@ -1,17 +1,77 @@
+# vip 0.4.0
+
+## Changed
+
+* This NEWS file now follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
+
+* Removed lifecycle badge from `README` file.
+
+* The training data has to be explicitly passed in more cases when using `vi_permute()`, `vi_shap()`, and `vi_firm()`.
+
+* Raised R version dependency to >= 4.1.0 (the introduction of the native piper operator `|>`).
+
+* The `vi_permute` function now relies on the [yardstick](https://cran.r-project.org/package=yardstick) package for compouting performance measures (e.g., RMSE and log loss); consequently, user-supplied metric functions now nned to conform to [yardstick](https://cran.r-project.org/package=yardstick) metric argument names.
+
+* The `var_fun` argument in `vi_firm()` has been deprecated; use the new `var_continuous` and `var_categorical` instead.
+
+* The explicit `ice` argument in `vi_firm()` has been removed; it was not really needed since it can be passed via the `...` argument. 
+
+* Removed [magrittr](https://cran.r-project.org/package=magrittr) from imports; it's easy enough to just laod the package if you need it or use R's newer internal pipe operator.
+
+* Tweaked examples.
+
+* Tests based on [fastshap](https://cran.r-project.org/package=fastshap) now check to make sure it's available.
+
+* Suppress loading of [mixOmics](https://bioconductor.org/packages/mixOmics/) in tests.
+
+* Switched lifecycle badge from "maturing", which has been superseded, to "experimental."
+
+* Fixed [H2O URL](https://docs.h2o.ai/h2o/latest-stable/h2o-docs/variable-importance.html) in `vi_model.R`.
+
+* Removed the unnecessary `LazyData: true` line from the `DESCRIPTION` file.
+
+* Switched to using markdown syntax in `roxygen2` comments.
+
+## Added
+
+* `vi_model()` now supports [lightgbm](https://cran.r-project.org/package=lightgbm) models. Thanks to @nipnipj for the suggestion [(#146)](https://github.com/koalaverse/vip/issues/146).
+
+* The permutation importance method (i.e., function `vi_permute()`) now integrates with and uses [yardstick](https://cran.r-project.org/package=yardstick) performance metrics.
+
+* `list_metrics()` gained an additional `smaller_is_better` column indicating whether or not the corresponding metric should be minimized (`smaller_is_better = TRUE`) or maximized (`smaller_is_better = FALSE`); thanks to @topedo. Additionally, all the column names are now in lower case. 
+
+* Added support for partial least squares via the [mixOmics](https://bioconductor.org/packages/mixOmics/) package [(PR #129)](https://github.com/koalaverse/vip/pull/129); thanks to @topedo.
+
+* Added support for the [workflows](https://cran.r-project.org/package=workflows) and [parsnip](https://cran.r-project.org/package=parsnip) packages from the [tidymodels](https://www.tidymodels.org/) ecosystem [(PR #128)](https://github.com/koalaverse/vip/pull/128); thanks to @topedo.
+
+* New [pkgdown](https://cran.r-project.org/package=pkgdown) site and vignette based on our original R Journal article.
+
+## Removed
+
+* Function `add_sparklines()` seems out of scope and has been removed.
+* Function `vint()` also seems out of scope and is too slow to implement for most practical problems; for now, the function will likely live on in the [moreparty](https://cran.r-project.org/package=moreparty) package.
+
+
+## Fixed
+
+* Fix model-based VI support for [mlr](https://cran.r-project.org/package=mlr), [mlr3](https://cran.r-project.org/package=mlr3), [parsnip](https://cran.r-project.org/package=parsnip), and [workflows](https://cran.r-project.org/package=workflows) model fits.
+
+
 # vip 0.3.2
 
 ## Miscellaneous
 
-* Add `tools/` to `.Rbuildignore`.
+* Add `tools/` to .Rbuildignore.
 
 
 # vip 0.3.1
 
 ## Miscellaneous
 
-* Change http://spark.rstudio.com/mlib/ to https://spark.rstudio.com/mlib/ in `NEWS.md`.
+* Change http://spark.rstudio.com/mlib/ to https://spark.rstudio.com/mlib/ in NEWS.md.
 
-* Remove unnecessary `codecov.yml` file.
+* Remove unnecessary codecov.yml file.
+
 
 # vip 0.3.0
 
@@ -31,11 +91,13 @@
 
 * Switch from `tibble::as.tibble()`---which was deprecated in [tibble](https://github.com/tidyverse/tibble) 2.0.0---to `tibble::as_tibble()` in a few function calls [(#101)](https://github.com/koalaverse/vip/issues/101).
 
+
 # vip 0.2.2
 
 ## User-visible changes
 
 * The `Importance` column from `vi_model()` no longer contains "inner" names; in accordance with breaking changes in [tibble](https://github.com/tidyverse/tibble) 3.0.0.
+
 
 # vip 0.2.1
 

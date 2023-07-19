@@ -3,9 +3,6 @@
 \name{vi}
 \alias{vi}
 \alias{vi.default}
-\alias{vi.model_fit}
-\alias{vi.WrappedModel}
-\alias{vi.Learner}
 \title{Variable importance}
 \usage{
 vi(object, ...)
@@ -14,9 +11,6 @@ vi(object, ...)
   object,
   method = c("model", "firm", "permute", "shap"),
   feature_names = NULL,
-  FUN = NULL,
-  var_fun = NULL,
-  ice = FALSE,
   abbreviate_feature_names = NULL,
   sort = TRUE,
   decreasing = TRUE,
@@ -24,48 +18,32 @@ vi(object, ...)
   rank = FALSE,
   ...
 )
-
-\method{vi}{model_fit}(object, ...)
-
-\method{vi}{WrappedModel}(object, ...)
-
-\method{vi}{Learner}(object, ...)
 }
 \arguments{
-\item{object}{A fitted model object (e.g., a \code{"randomForest"} object) or
-an object that inherits from class \code{"vi"}.}
+\item{object}{A fitted model object (e.g., a
+\link[randomForest:randomForest]{randomForest} object) or an object that inherits
+from class \code{"vi"}.}
 
 \item{...}{Additional optional arguments to be passed on to
-\code{\link{vi_model}}, \code{\link{vi_firm}}, \code{\link{vi_permute}},
-or \code{\link{vi_shap}}.}
+\link[=vi_model]{vi_model}, \link[=vi_firm]{vi_firm},
+\link[=vi_permute]{vi_permute}, or \link[=vi_shap]{vi_shap}; see their
+respective help pages for details.}
 
 \item{method}{Character string specifying the type of variable importance
-(VI) to compute. Current options are \code{"model"} (the default), for
-model-specific VI scores (see \code{\link{vi_model}} for details),
-\code{"firm"}, for variance-based VI scores (see \code{\link{vi_firm}} for
-details), \code{"permute"}, for permutation-based VI scores (see '
-\code{\link{vi_permute}} for details), or \code{"shap"}, for Shapley-based
-VI scores. For more details on the variance-based methods, see
-\href{https://arxiv.org/abs/1805.04755}{Greenwell et al. (2018)} and
-\href{https://arxiv.org/abs/1904.03959}{Scholbeck et al. (2019)}.}
+(VI) to compute. Current options are:
+\itemize{
+\item \code{"model"} (the default), for model-specific VI scores (see
+\link[=vi_model]{vi_model} for details).
+\item \code{"firm"}, for variance-based VI scores (see \link[=vi_firm]{vi_firm} for
+details).
+\item \code{"permute"}, for permutation-based VI scores (see
+\link[=vi_permute]{vi_permute} for details).
+\item \code{"shap"}, for Shapley-based VI scores (see \link[=vi_shap]{vi_shap} for
+details).
+}}
 
 \item{feature_names}{Character string giving the names of the predictor
 variables (i.e., features) of interest.}
-
-\item{FUN}{Deprecated. Use \code{var_fun} instead.}
-
-\item{var_fun}{List with two components, \code{"cat"} and \code{"con"},
-containing the functions to use to quantify the variability of the feature
-effects (e.g., partial dependence values) for categorical and continuous
-features, respectively. If \code{NULL}, the standard deviation is used for
-continuous features. For categorical features, the range statistic is used
-(i.e., (max - min) / 4). Only applies when \code{method = "firm"}.}
-
-\item{ice}{Logical indicating whether or not to estimate feature effects
-using \emph{individual conditional expectation} (ICE) curves.
-Only applies when \code{method = "firm"}. Default is \code{FALSE}. Setting
-\code{ice = TRUE} is preferred whenever strong interaction effects are
-potentially present.}
 
 \item{abbreviate_feature_names}{Integer specifying the length at which to
 abbreviate feature names. Default is \code{NULL} which results in no
@@ -87,13 +65,23 @@ Potentially useful when comparing variable importance scores across different
 models using different methods.}
 }
 \value{
-A tidy data frame (i.e., a \code{"tibble"} object) with at least two
-columns: \code{Variable} and \code{Importance}. For \code{"lm"/"glm"}-like
-objects, an additional column, called \code{Sign}, is also included which
-includes the sign (i.e., POS/NEG) of the original coefficient. If
-\code{method = "permute"} and  \code{nsim > 1}, then an additional column,
-\code{StDev}, giving the standard deviation of the permutation-based
-variable importance scores is included.
+A tidy data frame (i.e., a \link[tibble:tibble]{tibble} object) with two
+columns:
+\itemize{
+\item \code{Variable} - the corresponding feature name;
+\item \code{Importance} - the associated importance, computed as the average change in
+performance after a random permutation (or permutations, if \code{nsim > 1}) of
+the feature in question.
+}
+
+For \link[stats:lm]{lm}/\link[stats:glm]{glm}-like objects, whenever
+\code{method = "model"}, the sign (i.e., POS/NEG) of the original coefficient is
+also included in a column called \code{Sign}.
+
+If \code{method = "permute"} and \code{nsim > 1}, then an additional column (\code{StDev})
+containing the standard deviation of the individual permutation scores for
+each feature is also returned; this helps assess the stability/variation of
+the individual permutation importance for each feature.
 }
 \description{
 Compute variable importance scores for the predictors in a model.
@@ -109,16 +97,58 @@ data(mtcars)
 # Fit a projection pursuit regression model
 mtcars.ppr <- ppr(mpg ~ ., data = mtcars, nterms = 1)
 
-# Compute variable importance scores
-vi(mtcars.ppr, method = "firm", ice = TRUE)
-vi(mtcars.ppr, method = "firm", ice = TRUE,
-   var_fun = list("con" = mad, "cat" = function(x) diff(range(x)) / 4))
+# Prediction wrapper that tells vi() how to obtain new predictions from your
+# fitted model
+pfun <- function(object, newdata) predict(object, newdata = newdata)
+
+# Compute permutation-based variable importance scores
+set.seed(1434)  # for reproducibility
+(vis <- vi(mtcars.ppr, method = "permute", target = "mpg", nsim = 10,
+           metric = "rmse", pred_wrapper = pfun, train = mtcars))
 
 # Plot variable importance scores
-vip(mtcars.ppr, method = "firm", ice = TRUE)
+vip(vis, include_type = TRUE, all_permutations = TRUE,
+    geom = "point", aesthetics = list(color = "forestgreen", size = 3))
+
+#
+# A binary classification example
+#
+\dontrun{
+library(rpart)  # for classification and regression trees
+
+# Load Wisconsin breast cancer data; see ?mlbench::BreastCancer for details
+data(BreastCancer, package = "mlbench")
+bc <- subset(BreastCancer, select = -Id)  # for brevity
+
+# Fit a standard classification tree
+set.seed(1032)  # for reproducibility
+tree <- rpart(Class ~ ., data = bc, cp = 0)
+
+# Prune using 1-SE rule (e.g., use `plotcp(tree)` for guidance)
+cp <- tree$cptable
+cp <- cp[cp[, "nsplit"] == 2L, "CP"]
+tree2 <- prune(tree, cp = cp)  # tree with three splits
+
+# Default tree-based VIP
+vip(tree2)
+
+# Computing permutation importance requires a prediction wrapper. For
+# classification, the return value depends on the chosen metric; see
+# `?vip::vi_permute` for details.
+pfun <- function(object, newdata) {
+  # Need vector of predicted class probabilities when using  log-loss metric
+  predict(object, newdata = newdata, type = "prob")[, "malignant"]
 }
-\references{
-Greenwell, B. M., Boehmke, B. C., and McCarthy, A. J. A Simple
-and Effective Model-Based Variable Importance Measure. arXiv preprint
-arXiv:1805.04755 (2018).
+
+# Permutation-based importance (note that only the predictors that show up
+# in the final tree have non-zero importance)
+set.seed(1046)  # for reproducibility
+vi(tree2, method = "permute", nsim = 10, target = "Class", train = bc,
+   metric = "logloss", pred_wrapper = pfun, reference_class = "malignant")
+
+# Equivalent (but not sorted)
+set.seed(1046)  # for reproducibility
+vi_permute(tree2, nsim = 10, target = "Class", metric = "logloss",
+           pred_wrapper = pfun, reference_class = "malignant")
+}
 }

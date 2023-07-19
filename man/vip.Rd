@@ -4,6 +4,9 @@
 \alias{vip}
 \alias{vip.default}
 \alias{vip.model_fit}
+\alias{vip.workflow}
+\alias{vip.WrappedModel}
+\alias{vip.Learner}
 \title{Variable importance plots}
 \usage{
 vip(object, ...)
@@ -22,57 +25,56 @@ vip(object, ...)
 )
 
 \method{vip}{model_fit}(object, ...)
+
+\method{vip}{workflow}(object, ...)
+
+\method{vip}{WrappedModel}(object, ...)
+
+\method{vip}{Learner}(object, ...)
 }
 \arguments{
-\item{object}{A fitted model object (e.g., a \code{"randomForest"} object) or
-an object that inherits from class \code{"vi"}.}
+\item{object}{A fitted model (e.g., of class
+\link[randomForest:randomForest]{randomForest} object) or a \link[=vi]{vi} object.}
 
-\item{...}{Additional optional arguments to be passed on to \code{\link{vi}}.}
+\item{...}{Additional optional arguments to be passed on to \link[=vi]{vi}.}
 
 \item{num_features}{Integer specifying the number of variable importance
 scores to plot. Default is \code{10}.}
 
 \item{geom}{Character string specifying which type of plot to construct.
 The currently available options are described below.
+\itemize{
+\item \code{geom = "col"} uses \link[ggplot2:geom_bar]{geom_col} to construct a bar chart
+of the variable importance scores.
+\item \code{geom = "point"} uses \link[ggplot2:geom_point]{geom_point} to construct a
+Cleveland dot plot of the variable importance scores.
+\item \code{geom = "boxplot"} uses \link[ggplot2:geom_boxplot]{geom_boxplot} to
+construct a boxplot plot of the variable importance scores. This option can
+only for the permutation-based importance method with \code{nsim > 1} and
+\code{keep = TRUE}; see \link[=vi_permute]{vi_permute} for details.
+\item \code{geom = "violin"} uses \link[ggplot2:geom_violin]{geom_violin} to
+construct a violin plot of the variable importance scores. This option can
+only for the permutation-based importance method with \code{nsim > 1} and
+\code{keep = TRUE}; see \link[=vi_permute]{vi_permute} for details.
+}}
 
- \itemize{
-
- \item \code{geom = "col"} uses \code{\link[ggplot2:geom_bar]{geom_col}} to construct
- a bar chart of the variable importance scores.
-
- \item \code{geom = "point"} uses \code{\link[ggplot2]{geom_point}} to
- construct a Cleveland dot plot of the variable importance scores.
-
- \item \code{geom = "boxplot"} uses \code{\link[ggplot2]{geom_boxplot}} to
- construct a boxplot plot of the variable importance scores. This option can
- only for the permutation-based importance method with \code{nsim > 1} and
- \code{keep = TRUE}; see \code{\link{vi_permute}} for details.
-
- \item \code{geom = "violin"} uses \code{\link[ggplot2]{geom_violin}} to
- construct a violin plot of the variable importance scores. This option can
- only for the permutation-based importance method with \code{nsim > 1} and
- \code{keep = TRUE}; see \code{\link{vi_permute}} for details.
-
- }}
-
-\item{mapping}{Set of aesthetic mappings created by \code{\link[ggplot2]{aes}}
-or \code{\link[ggplot2]{aes_}}. See example usage below.}
+\item{mapping}{Set of aesthetic mappings created by \link[ggplot2:aes]{aes}
+or \link[ggplot2:aes_]{aes_}. See example usage below.}
 
 \item{aesthetics}{List specifying additional arguments passed on to
-\code{\link[ggplot2]{layer}}. These are often aesthetics, used to set an
-aesthetic to a fixed value, like \code{colour = "red"} or \code{size = 3}.
-See example usage below.}
+\link[ggplot2:layer]{layer}. These are often aesthetics, used to set an aesthetic
+to a fixed value, like\code{colour = "red"} or \code{size = 3}. See example usage
+below.}
 
 \item{horizontal}{Logical indicating whether or not to plot the importance
 scores on the x-axis (\code{TRUE}). Default is \code{TRUE}.}
 
 \item{all_permutations}{Logical indicating whether or not to plot all
-permutation scores along with the average. Default is \code{FALSE}. (Only
-used for permutation scores when \code{nsim > 1}.)}
+permutation scores along with the average. Default is \code{FALSE}. (Only used for
+permutation scores when \code{nsim > 1}.)}
 
 \item{jitter}{Logical indicating whether or not to jitter the raw permutation
-scores. Default is \code{FALSE}. (Only used when
-\code{all_permutations = TRUE}.)}
+scores. Default is \code{FALSE}. (Only used when \code{all_permutations = TRUE}.)}
 
 \item{include_type}{Logical indicating whether or not to include the type of
 variable importance computed in the axis label. Default is \code{FALSE}.}
@@ -82,7 +84,7 @@ Plot variable importance scores for the predictors in a model.
 }
 \examples{
 #
-# A projection pursuit regression example
+# A projection pursuit regression example using permutation-based importance
 #
 
 # Load the sample data
@@ -91,36 +93,59 @@ data(mtcars)
 # Fit a projection pursuit regression model
 model <- ppr(mpg ~ ., data = mtcars, nterms = 1)
 
-# Construct variable importance plot
-vip(model, method = "firm")
-
-# Better yet, store the variable importance scores and then plot
-vi_scores <- vi(model, method = "firm")
-vip(vi_scores, geom = "point", horiz = FALSE)
-vip(vi_scores, geom = "point", horiz = FALSE, aesthetics = list(size = 3))
-
-# The `\%T>\\%` operator is imported for convenience; see ?magrittr::`\%T>\%`
-# for details
-vi_scores <- model \%>\%
-  vi(method = "firm") \%T>\%
-  {print(vip(.))}
-vi_scores
-
-# Permutation scores (barplot w/ raw values and jittering)
+# Construct variable importance plot (permutation importance, in this case)
+set.seed(825)  # for reproducibility
 pfun <- function(object, newdata) predict(object, newdata = newdata)
 vip(model, method = "permute", train = mtcars, target = "mpg", nsim = 10,
-    metric = "rmse", pred_wrapper = pfun,
-    aesthetics = list(color = "grey50", fill = "grey50"),
-    all_permutations = TRUE, jitter = TRUE)
+    metric = "rmse", pred_wrapper = pfun)
 
-# Permutation scores (boxplot)
-vip(model, method = "permute", train = mtcars, target = "mpg", nsim = 10,
-    metric = "rmse", pred_wrapper = pfun, geom = "boxplot")
+# Better yet, store the variable importance scores and then plot
+set.seed(825)  # for reproducibility
+vis <- vi(model, method = "permute", train = mtcars, target = "mpg",
+          nsim = 10, metric = "rmse", pred_wrapper = pfun)
+vip(vis, geom = "point", horiz = FALSE)
+vip(vis, geom = "point", horiz = FALSE, aesthetics = list(size = 3))
 
-# Permutation scores (boxplot colored by feature)
+# Plot unaggregated permutation scores (boxplot colored by feature)
 library(ggplot2)  # for `aes_string()` function
-vip(model, method = "permute", train = mtcars, target = "mpg", nsim = 10,
-    metric = "rmse", pred_wrapper = pfun, geom = "boxplot",
-    all_permutations = TRUE, mapping = aes_string(fill = "Variable"),
+vip(vis, geom = "boxplot", all_permutations = TRUE, jitter = TRUE,
+    mapping = aes_string(fill = "Variable"),
     aesthetics = list(color = "grey35", size = 0.8))
+
+#
+# A binary classification example
+#
+\dontrun{
+library(rpart)  # for classification and regression trees
+
+# Load Wisconsin breast cancer data; see ?mlbench::BreastCancer for details
+data(BreastCancer, package = "mlbench")
+bc <- subset(BreastCancer, select = -Id)  # for brevity
+
+# Fit a standard classification tree
+set.seed(1032)  # for reproducibility
+tree <- rpart(Class ~ ., data = bc, cp = 0)
+
+# Prune using 1-SE rule (e.g., use `plotcp(tree)` for guidance)
+cp <- tree$cptable
+cp <- cp[cp[, "nsplit"] == 2L, "CP"]
+tree2 <- prune(tree, cp = cp)  # tree with three splits
+
+# Default tree-based VIP
+vip(tree2)
+
+# Computing permutation importance requires a prediction wrapper. For
+# classification, the return value depends on the chosen metric; see
+# `?vip::vi_permute` for details.
+pfun <- function(object, newdata) {
+  # Need vector of predicted class probabilities when using  log-loss metric
+  predict(object, newdata = newdata, type = "prob")[, "malignant"]
+}
+
+# Permutation-based importance (note that only the predictors that show up
+# in the final tree have non-zero importance)
+set.seed(1046)  # for reproducibility
+vip(tree2, method = "permute", nsim = 10, target = "Class",
+    metric = "logloss", pred_wrapper = pfun, reference_class = "malignant")
+}
 }

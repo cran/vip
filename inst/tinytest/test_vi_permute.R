@@ -1,91 +1,98 @@
-# Generate Friedman benchmark data
-friedman1 <-  gen_friedman(seed = 101)
-friedman2 <- gen_friedman(seed = 101, n_bins = 2)
-friedman3 <- gen_friedman(seed = 101, n_bins = 3)
+# Check dependencies
+exit_if_not(
+  requireNamespace("ranger", quietly = TRUE)
+)
+
+# Prediction wrappers
+pfun <- function(object, newdata) {  # classification and regression
+  predict(object, data = newdata)$predictions
+}
+pfun_prob <- function(object, newdata) {  # probability estimation
+  predict(object, data = newdata)$predictions[, "yes"]  # P(survived|x)
+}
+
+# Read in data sets
+f1 <-  gen_friedman(seed = 101)  # regression
+t3 <- titanic_mice[[1L]]  # classification
 
 # List all available metrics
 metrics <- list_metrics()
 expect_true(inherits(metrics, what = "data.frame"))
 
-# Function to run expectations
-expectations <- function(object) {
 
+################################################################################
+#
+# Regression
+#
+################################################################################
+
+# Expectation function for models built on the Friedman 1 data set
+expectations_f1 <- function(object) {
   # Check class
   expect_identical(class(object),
                    target = c("vi", "tbl_df", "tbl", "data.frame"))
 
   # Check dimensions (should be one row for each feature)
-  expect_identical(ncol(friedman1) - 1L, target = nrow(object))
+  expect_identical(ncol(f1) - 1L, target = nrow(object))
 
   # Check top five predictors
   expect_true(all(paste0("x", 1L:5L) %in% object$Variable[1L:5L]))
-
 }
 
-
-# Regression -------------------------------------------------------------------
-
-# Fit model
-fit1 <- stats::lm(y ~ sin(x1*x2) + I((x3 - 0.5) ^ 2) + x4 + x5 +
-                    x6 + x7 + x8 + x9 + x10, data = friedman1)
-pfun <- function(object, newdata) {
-  predict(object, newdata = newdata)
-  # predict(object, data = newdata)$predictions  # for ranger models
-}
+# Fit a (default) random forest
+set.seed(1433)  # for reproducibility
+rfo_f1 <- ranger::ranger(y ~ ., data = f1)
 
 # Try all regression metrics
-regression_metrics <- metrics[metrics$Task == "Regression", ]$Metric
+regression_metrics <- metrics[metrics$task == "Regression", ]$metric
 set.seed(828)  # for reproducibility
 vis <- lapply(regression_metrics, FUN = function(x) {
-  vi(fit1, method = "permute", target = "y", metric = x, pred_wrapper = pfun,
-     nsim = 10)
+  vi(rfo_f1, method = "permute", target = "y", metric = x,
+     pred_wrapper = pfun, nsim = 10)
 })
-lapply(vis, FUN = expectations)
-grid.arrange(nrow = 2, grobs = lapply(vis, FUN = function(x) {
-  vip(x, geom = "boxplot")
-}))
+lapply(vis, FUN = expectations_f1)
 
 # Use a custom metric
-rsquared <- function(actual, predicted) {
-  cor(actual, predicted) ^ 2
+rsquared <- function(truth, estimate) {
+  cor(truth, estimate) ^ 2
 }
 
 # Compute permutation-based importance using R-squared (character string)
 set.seed(925)  # for reproducibility
 vis_rsquared <- vi_permute(
-  object = fit1,
-  # train = friedman1,
+  object = rfo_f1,
+  # train = f1,
   target = "y",
-  metric = "rsquared",
+  metric = "rsq",
   pred_wrapper = pfun,
   sample_size = 90,
   nsim = 10
 )
-expectations(vis_rsquared)
+expectations_f1(vis_rsquared)
 
 # Compute permutation-based importance using R-squared (custim function)
 set.seed(925)  # for reproducibility
 vis_rsquared_custom <- vi_permute(
-  object = fit1,
-  train = subset(friedman1, select = -y),
-  target = friedman1$y,
+  object = rfo_f1,
+  train = subset(f1, select = -y),
+  target = f1$y,
   metric = rsquared,
   smaller_is_better = FALSE,
   sample_frac = 0.9,
   pred_wrapper = pfun,
   nsim = 10
 )
-expectations(vis_rsquared_custom)
+expectations_f1(vis_rsquared_custom)
 
 # Check that results are identical
-expect_identical(vis_rsquared, target = vis_rsquared_custom)
+expect_equal(vis_rsquared, target = vis_rsquared_custom)
 
 # Expected errors for `vi_permute()`
 expect_error(  # missing `pred_wrapper`
   vi_permute(
-    object = fit1,
-    train = subset(friedman1, select = -y),
-    target = friedman1$y,
+    object = rfo_f1,
+    train = subset(f1, select = -y),
+    target = f1$y,
     metric = rsquared,
     smaller_is_better = FALSE,
     # pred_wrapper = pfun,
@@ -94,9 +101,9 @@ expect_error(  # missing `pred_wrapper`
 )
 expect_error(  # missing `target`
   vi_permute(
-    object = fit1,
-    train = subset(friedman1, select = -y),
-    # target = friedman1$y,
+    object = rfo_f1,
+    train = subset(f1, select = -y),
+    # target = f1$y,
     metric = rsquared,
     smaller_is_better = FALSE,
     pred_wrapper = pfun,
@@ -105,9 +112,9 @@ expect_error(  # missing `target`
 )
 expect_error(  # missing `smaller_is_better`
   vi_permute(
-    object = fit1,
-    train = subset(friedman1, select = -y),
-    target = friedman1$y,
+    object = rfo_f1,
+    train = subset(f1, select = -y),
+    target = f1$y,
     metric = rsquared,
     # smaller_is_better = FALSE,
     pred_wrapper = pfun,
@@ -116,9 +123,9 @@ expect_error(  # missing `smaller_is_better`
 )
 expect_error(  # trying to set`sample_frac` and `sample_size`
   vi_permute(
-    object = fit1,
-    train = subset(friedman1, select = -y),
-    target = friedman1$y,
+    object = rfo_f1,
+    train = subset(f1, select = -y),
+    target = f1$y,
     metric = rsquared,
     smaller_is_better = FALSE,
     pred_wrapper = pfun,
@@ -128,9 +135,9 @@ expect_error(  # trying to set`sample_frac` and `sample_size`
 )
 expect_error(  # setting `sample_frac` outside of range
   vi_permute(
-    object = fit1,
-    train = subset(friedman1, select = -y),
-    target = friedman1$y,
+    object = rfo_f1,
+    train = subset(f1, select = -y),
+    target = f1$y,
     metric = rsquared,
     smaller_is_better = FALSE,
     pred_wrapper = pfun,
@@ -139,121 +146,61 @@ expect_error(  # setting `sample_frac` outside of range
 )
 
 
-# Classification (binary) ------------------------------------------------------
+################################################################################
+#
+# Binary classification
+#
+################################################################################
 
-# Fit model
-fit2 <- stats::glm(y ~ sin(x1*x2) + I((x3 - 0.5) ^ 2) + x4 + x5 + x6 + x7 + x8 +
-                     x9 + x10, data = friedman2, family = binomial)
-pred_prob <- function(object, newdata) {
-  # By default, glm() is estimating "class2" probability
-  1 - predict(object, newdata = newdata, type = "response")
+# Expectation function for models built on the Friedman 1 data set
+expectations_t3 <- function(object) {
+  # Check class
+  expect_identical(class(object),
+                   target = c("vi", "tbl_df", "tbl", "data.frame"))
+
+  # Check dimensions (should be one row for each feature)
+  expect_identical(ncol(t3) - 1L, target = nrow(object))
+
+  # Expect all VI scores to be positive
+  expect_true(all(object$Importance > 0))
 }
-pred_label <- function(object, newdata) {
-  p <- pred_prob(object, newdata = newdata)
-  ifelse (p > 0.5, yes = "class1", no = "class2")
-}
-
-# Compute permutation-based importance using AUC metric
-set.seed(850)  # for reproducibility
-vis_auc <- vi_permute(
-  object = fit2,
-  # train = friedman1,
-  target = "y",
-  metric = "auc",
-  pred_wrapper = pred_prob,
-  reference_class = "class1"
-)
-expectations(vis_auc)
-
-# Compute permutation-based importance using logloss metric
-set.seed(901)  # for reproducibility
-vis_logloss <- vi_permute(
-  object = fit2,
-  # train = friedman1,
-  target = "y",
-  metric = "logloss",
-  pred_wrapper = pred_prob,
-  reference_class = "class1"
-)
-expectations(vis_logloss)
-
-# Compute permutation-based importance using accuracy metric
-set.seed(905)  # for reproducibility
-vis_accuracy <- vi_permute(
-  object = fit2,
-  # train = friedman1,
-  target = "y",
-  metric = "accuracy",
-  pred_wrapper = pred_label,
-  reference_class = "class1"
-)
-expectations(vis_accuracy)
-
-# Compute permutation-based importance using classification error metric
-set.seed(907)  # for reproducibility
-vis_error <- vi_permute(
-  object = fit2,
-  # train = friedman1,
-  target = "y",
-  metric = "error",
-  pred_wrapper = pred_label,
-  reference_class = "class1"
-)
-expectations(vis_error)
-
-# Display VIPs in a grid
-grid.arrange(
-  vip(vis_auc), vip(vis_logloss), vip(vis_accuracy), vip(vis_error), nrow = 2
-)
-
-# Expect error if using AUC (or logLoss) with no reference class
-expect_error(
-  vi_permute(
-    object = fit2,
-    train = friedman1,
-    target = "y",
-    metric = "auc",
-    pred_wrapper = pred_prob
-    # reference_class = "class1"
-  )
-)
-
-
-# Classification (multiclass) --------------------------------------------------
-
-# Exits
-if (!requireNamespace("ranger", quietly = TRUE)) {
-  exit_file("Package ranger missing")
-}
-
-# # Load required packages
-# suppressMessages({
-#   library(ranger)
-# })
 
 # Fit a (default) random forest
+set.seed(1454)  # for reproducibility
+rfo_t3 <- ranger::ranger(survived ~ ., data = t3)
+
+# Try all binary classification metrics
+binary_class_metrics <-
+  metrics[grepl("binary", x = metrics$task, ignore.case = TRUE), ]$metric[1:3]
 set.seed(928)  # for reproducibility
-fit3 <- ranger::ranger(y ~ ., data = friedman3, probability = TRUE,
-                       importance = "impurity")
+vis <- lapply(binary_class_metrics, FUN = function(x) {
+  vi(rfo_t3, method = "permute", target = "survived", metric = x,
+     pred_wrapper = pfun, nsim = 10)
+})
+lapply(vis, FUN = expectations_t3)
 
-# Prediction wrapper
-pred_multi_prob <- function(object, newdata) {
-  predict(object, data = newdata)$predictions
+# Fit a (default) probability forest
+set.seed(1508)  # for reproducibility
+rfo_t3_prob <- ranger::ranger(survived ~ ., data = t3, probability = TRUE)
+
+# Try all probability-based metrics
+binary_prob_metrics <- c("roc_auc", "pr_auc", "logloss")
+set.seed(1028)  # for reproducibility
+vis <- lapply(binary_prob_metrics, FUN = function(x) {
+  vi(rfo_t3_prob, method = "permute", target = "survived", metric = x,
+     pred_wrapper = pfun_prob, nsim = 10, event_level = "second")
+})
+lapply(vis, FUN = expectations_t3)
+
+# Try user-supplied metric with Brier score
+brier <- function(truth, estimate)  {
+  mean((ifelse(truth == "yes", 1, 0) - estimate) ^ 2)
 }
-
-# Compute permutation-based importance using mauc metric
-set.seed(932)  # for reproducibility
-vis_mauc <- vi_permute(
-  object = fit3,
-  train = friedman3,
-  target = "y",
-  metric = "mauc",
-  pred_wrapper = pred_multi_prob,
-  reference_class = "class1",
-  nsim = 10
+expectations_t3(
+  vi(rfo_t3_prob, method = "permute", target = "survived", metric = brier,
+     pred_wrapper = pfun_prob, nsim = 10, smaller_is_better = TRUE)
 )
-expectations(vis_mauc)
-
-# Display VIP
-vip(vis_mauc, geom = "boxplot")
-sort(fit3$variable.importance)
+expect_error(  # need to set `smalle_is_better` for non built-in metrics
+  vi(rfo_t3_prob, method = "permute", target = "survived", metric = brier,
+     pred_wrapper = pfun_prob, nsim = 10)
+)

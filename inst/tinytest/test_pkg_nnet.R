@@ -1,9 +1,9 @@
 # Exits
 if (!requireNamespace("nnet", quietly = TRUE)) {
-  exit_file("Package nnet missing")
+  exit_file("Package 'nnet' missing")
 }
 if (!requireNamespace("NeuralNetTools", quietly = TRUE)) {
-  exit_file("Package NeuralNetTools missing")
+  exit_file("Package 'NeuralNetTools' missing")
 }
 
 # # Load required packages
@@ -34,12 +34,6 @@ expect_identical(
   target = NeuralNetTools::garson(fit, bar_plot = FALSE)$rel_imp
 )
 
-# Expectations for `get_training_data()`
-expect_identical(
-  current = vip:::get_training_data.default(fit),
-  target = friedman1
-)
-
 # Expectations for `get_feature_names()`
 expect_identical(
   current = vip:::get_feature_names.nnet(fit),
@@ -53,12 +47,4 @@ p <- vip(fit, method = "model", include_type = TRUE)
 expect_identical(
   current = class(p),
   target = c("gg", "ggplot")
-)
-
-# Display VIPs side by side
-grid.arrange(
-  vip(vis1, include_type = TRUE),
-  vip(vis2, include_type = TRUE),
-  p,
-  nrow = 1
 )

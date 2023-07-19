@@ -1,3 +1,8 @@
+# Exits
+if (!requireNamespace("fastshap", quietly = TRUE)) {
+  exit_file("Package 'fastshap' missing")
+}
+
 # Simulate Friedman benchmark data
 trn1 <- gen_friedman(100, seed = 1421)
 trn2 <- gen_friedman(100, seed = 1421, n_bins = 2)
@@ -13,15 +18,7 @@ pfun <- function(object, newdata) {
 }
 
 # Compute SHAP-based VI scores
-set.seed(1511)  # for reproducibiliity
-vis1 <- vi_shap(fit1, pred_wrapper = pfun, nsim = 10)
-vis2 <- vi_shap(fit2, pred_wrapper = pfun, nsim = 10)
-vis3 <- vi(fit1, method = "shap", pred_wrapper = pfun, nsim = 10,
-           .progress = "text")
-
-# Try using vip directly
-p <- vip(fit1, method = "shap", pred_wrapper = pfun, nsim = 10,
-         .progress = "text")
-
-# Display plots in a grid
-grid.arrange(vip(vis1), vip(vis2), vip(vis3), p, nrow = 2)
+set.seed(1511)  # for reproducibility
+vis1 <- vi_shap(fit1, pred_wrapper = pfun, nsim = 10, train = trn1)
+vis2 <- vi_shap(fit2, pred_wrapper = pfun, nsim = 10, train = trn2)
+vis3 <- vi(fit1, method = "shap", pred_wrapper = pfun, nsim = 10, train = trn1)
