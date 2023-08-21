@@ -1,7 +1,7 @@
 Package: vip
 Type: Package
 Title: Variable Importance Plots
-Version: 0.4.0
+Version: 0.4.1
 Authors@R: c(
   person(c("Brandon", "M."), family = "Greenwell", 
          email = "greenwell.brandon@gmail.com",
@@ -40,10 +40,10 @@ Enhances: C50, caret, Cubist, earth, gbm, glmnet, h2o, lightgbm,
 LazyData: true
 RoxygenNote: 7.2.3
 NeedsCompilation: no
-Packaged: 2023-07-17 14:47:57 UTC; bgreenwell
+Packaged: 2023-08-18 21:16:45 UTC; bgreenwell
 Author: Brandon M. Greenwell [aut, cre]
     (<https://orcid.org/0000-0002-8120-0084>),
   Brad Boehmke [aut] (<https://orcid.org/0000-0002-3611-8516>)
 Maintainer: Brandon M. Greenwell <greenwell.brandon@gmail.com>
 Repository: CRAN
-Date/Publication: 2023-07-19 09:00:02 UTC
+Date/Publication: 2023-08-21 09:20:02 UTC
