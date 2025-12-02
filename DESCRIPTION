@@ -1,7 +1,7 @@
 Package: vip
 Type: Package
 Title: Variable Importance Plots
-Version: 0.4.1
+Version: 0.4.2
 Authors@R: c(
   person(c("Brandon", "M."), family = "Greenwell", 
          email = "greenwell.brandon@gmail.com",
@@ -19,7 +19,7 @@ Description: A general framework for constructing variable importance plots from
   These include 1) an efficient permutation-based variable importance measure, 
   2) variable importance based on Shapley values (Strumbelj and Kononenko, 
   2014) <doi:10.1007/s10115-013-0679-x>, and 3) the variance-based 
-  approach described in Greenwell et al. (2018) <arXiv:1805.04755>. A 
+  approach described in Greenwell et al. (2018) <doi:10.48550/arXiv.1805.04755>. A 
   variance-based method for quantifying the relative strength of interaction 
   effects is also included (see the previous reference for details).
 License: GPL (>= 2)
@@ -37,13 +37,12 @@ Enhances: C50, caret, Cubist, earth, gbm, glmnet, h2o, lightgbm,
         mixOmics, mlr, mlr3, neuralnet, nnet, parsnip (>= 0.1.7),
         party, partykit, pls, randomForest, ranger, rpart, RSNNS,
         sparklyr (>= 0.8.0), tidymodels, workflows (>= 0.2.3), xgboost
-LazyData: true
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.3
 NeedsCompilation: no
-Packaged: 2023-08-18 21:16:45 UTC; bgreenwell
-Author: Brandon M. Greenwell [aut, cre]
-    (<https://orcid.org/0000-0002-8120-0084>),
-  Brad Boehmke [aut] (<https://orcid.org/0000-0002-3611-8516>)
+Packaged: 2025-12-01 20:03:23 UTC; greenwbm
+Author: Brandon M. Greenwell [aut, cre] (ORCID:
+    <https://orcid.org/0000-0002-8120-0084>),
+  Brad Boehmke [aut] (ORCID: <https://orcid.org/0000-0002-3611-8516>)
 Maintainer: Brandon M. Greenwell <greenwell.brandon@gmail.com>
 Repository: CRAN
-Date/Publication: 2023-08-21 09:20:02 UTC
+Date/Publication: 2025-12-02 06:10:03 UTC
