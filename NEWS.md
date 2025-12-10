@@ -1,6 +1,8 @@
-# vip 0.4.2
+# vip 0.4.3
 
 ## Fixed
+
+* Fixed CRAN check failures by explicitly loading `titanic_mice` dataset in test files. Tests now use `data("titanic_mice")` before accessing the dataset to ensure availability across all platforms.
 
 * Fixed ggplot class testing for ggplot2 S7 compatibility [(#162)](https://github.com/koalaverse/vip/issues/162). Replaced hardcoded class checks with `ggplot2::is_ggplot()` to ensure forward compatibility with ggplot2's upcoming S7 transition.
 

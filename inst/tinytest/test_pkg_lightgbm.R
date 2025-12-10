@@ -8,6 +8,9 @@ if (!requireNamespace("lightgbm", quietly = TRUE)) {
 #   library(lightgbm)
 # })
 
+# Load package data
+data("titanic_mice")
+
 # Basic example using imputed titanic data set
 t3 <- titanic_mice[[1L]]
 
