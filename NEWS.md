@@ -1,3 +1,23 @@
+# vip 0.4.5
+
+## Fixed
+
+* Fixed CRAN check failures on macOS (M1/ARM64, Intel) and Linux platforms by implementing selective test skipping for all test_pkg_* files with platform-specific or large dependency trees. All 23 package-specific test suites now skip on CRAN via `NOT_CRAN` environment variable, eliminating failures from external dependencies while maintaining comprehensive testing in CI/CD.
+
+## Changed
+
+* Expanded GitHub Actions CI/CD to 9 platform configurations covering all 13 CRAN check flavors:
+  - Windows (release, devel)
+  - macOS ARM64/M1 (release, devel)
+  - macOS Intel (release)
+  - Ubuntu/Debian (devel, release, oldrel-1, oldrel-2)
+
+* Added `NOT_CRAN=true` environment variable to CI/CD workflows, enabling comprehensive testing of all ML package integrations (40+ model types) while ensuring reliable CRAN submissions.
+
+* Cleaned up test files by removing commented-out `library()` statements from package-specific tests.
+
+* Added `.github/CRAN_PLATFORM_COVERAGE.md` documenting the complete mapping between GitHub Actions configurations and CRAN check platforms.
+
 # vip 0.4.3
 
 ## Fixed
